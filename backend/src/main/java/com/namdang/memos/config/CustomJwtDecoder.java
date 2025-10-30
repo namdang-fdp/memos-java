@@ -32,6 +32,13 @@ public class CustomJwtDecoder implements JwtDecoder {
     @Value("${JWT_SIGNER_KEY_BASE64}")
     String signerKey;
 
+    // After token in header pass through AuthenticationManager --> it will decode by nimbus
+    // Nimbus return an object of JWT (Remember: JWT not Token)
+    // JWT have:
+    // getTokenValue --> raw JWT
+    // getClaims --> Scope, sub, exp,...
+    // getHeader --> header of jwt
+    // get Issued, getExpired,...
     @Override
     public Jwt decode(String token) throws JwtException {
         try {
