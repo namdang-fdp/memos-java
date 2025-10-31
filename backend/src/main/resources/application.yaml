@@ -15,6 +15,7 @@ spring:
   flyway:
     enabled: false
     locations: classpath:db/migration
+
 server:
   port: ${SERVER_PORT}
 

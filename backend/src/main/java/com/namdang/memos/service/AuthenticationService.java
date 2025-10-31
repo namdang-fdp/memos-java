@@ -203,6 +203,27 @@ public class AuthenticationService {
                 .refreshToken(newRefresh)
                 .accessTtl(VALID_DURATION)
                 .refreshTtl(REFRESHABLE_DURATION)
+    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
+        var signedJWT = verifyToken(request.getToken(),true);
+        // check if user is belong to system yet
+        // cannot refresh token which is out of system scope
+        var email = signedJWT.getJWTClaimsSet().getSubject();
+        var user = accountRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.INVALID_EMAIL));
+
+        // if the user is valid --> invalidate this user token --> create new token for them
+        var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(jit)
+                .expiryTime(expiryTime)
+                .build();
+        invalidatedTokenRepository.save(invalidatedToken);
+
+        var token = generateToken(user);
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authenticated(true)
                 .build();
     }
 
@@ -220,6 +241,7 @@ public class AuthenticationService {
 
     // implement 7th --> authenticate any request with account and password
     public TokenPair authenticate(AuthenticationRequest authenticationRequest) {
+    public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) {
         Account user = accountRepository.findByEmail(authenticationRequest.getEmail()).orElseThrow(
                 () -> new AppException(ErrorCode.INVALID_EMAIL)
         );
@@ -235,6 +257,10 @@ public class AuthenticationService {
                 .refreshToken(refresh)
                 .accessTtl(VALID_DURATION)
                 .refreshTtl(REFRESHABLE_DURATION)
+        String token = generateToken(user);
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authenticated(true)
                 .build();
     }
 
