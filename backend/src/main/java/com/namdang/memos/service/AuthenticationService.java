@@ -6,6 +6,7 @@ import com.namdang.memos.dto.requests.auth.AuthenticationRequest;
 import com.namdang.memos.dto.requests.auth.IntrospectRequest;
 import com.namdang.memos.dto.responses.auth.AuthenticationResponse;
 import com.namdang.memos.dto.responses.auth.IntrospectResponse;
+import com.namdang.memos.dto.responses.auth.TokenPair;
 import com.namdang.memos.entity.Account;
 import com.namdang.memos.entity.InvalidatedToken;
 import com.namdang.memos.exception.AppException;
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
@@ -99,6 +101,31 @@ public class AuthenticationService {
         }
     }
 
+    // generate refresh token. the same logic with other refreshable time
+    private String generateRefreshToken(Account account) {
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
+                .subject(account.getEmail())
+                .issuer("namdang-fdp")
+                .issueTime(new Date())
+                .expirationTime(new Date(Instant.now().plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).toEpochMilli()
+                ))
+                .jwtID(UUID.randomUUID().toString())
+                .claim("scope", buildScope(account))
+                .claim("tok", "REFRESH")
+                .build();
+        Payload payload = new Payload(jwtClaimsSet.toJSONObject());
+        JWSObject jwsObject = new JWSObject(header, payload);
+        try {
+            jwsObject.sign(new MACSigner(SIGNER_KEY)); // signed
+            return jwsObject.serialize();
+        } catch (JOSEException e) {
+            log.error("Cannot create refresh token: Reason ", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+
     // implement 3rd, this function used to verify token whether it invalid or not
     private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
@@ -106,6 +133,12 @@ public class AuthenticationService {
 
         if(invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
             throw new AppException(ErrorCode.UNAUTHENTICATED_EXCEPTION);
+        }
+        if (isRefresh) {
+            Object tok = signedJWT.getJWTClaimsSet().getClaim("tok");
+            if (!"REFRESH".equals(tok)) {
+                throw new AppException(ErrorCode.UNAUTHENTICATED_EXCEPTION);
+            }
         }
         // there are 2 kinds of token
         // 1. Token to call API --> isRefresh == null
@@ -137,27 +170,39 @@ public class AuthenticationService {
     }
 
     // implement 5th --> func to refresh token
-    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
-        var signedJWT = verifyToken(request.getToken(),true);
-        // check if user is belong to system yet
-        // cannot refresh token which is out of system scope
-        var email = signedJWT.getJWTClaimsSet().getSubject();
-        var user = accountRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.INVALID_EMAIL));
+    // there are 2 type of token rotation
+    // this way is more secure, when user call refresh token api
+    // the old token will be invalidated and store to db
+    // create a new pair of token
+    @Transactional
+    public TokenPair refreshFromCookie(String refreshToken) throws ParseException, JOSEException {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED_EXCEPTION);
+        }
 
-        // if the user is valid --> invalidate this user token --> create new token for them
-        var jit = signedJWT.getJWTClaimsSet().getJWTID();
-        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        // 1) verify refresh token
+        SignedJWT signed = verifyToken(refreshToken, true);
+        String email = signed.getJWTClaimsSet().getSubject();
 
-        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-                .id(jit)
-                .expiryTime(expiryTime)
-                .build();
-        invalidatedTokenRepository.save(invalidatedToken);
+        Account user = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_EMAIL));
 
-        var token = generateToken(user);
-        return AuthenticationResponse.builder()
-                .token(token)
-                .authenticated(true)
+        // 2) rotate: revoke refresh old token
+        String oldJti = signed.getJWTClaimsSet().getJWTID();
+        Date oldExp   = signed.getJWTClaimsSet().getExpirationTime();
+        invalidatedTokenRepository.save(
+                InvalidatedToken.builder().id(oldJti).expiryTime(oldExp).build()
+        );
+
+        // 3) new pair token
+        String newAccess  = generateToken(user);           // TTL = VALID_DURATION
+        String newRefresh = generateRefreshToken(user);    // TTL = REFRESHABLE_DURATION
+
+        return TokenPair.builder()
+                .accessToken(newAccess)
+                .refreshToken(newRefresh)
+                .accessTtl(VALID_DURATION)
+                .refreshTtl(REFRESHABLE_DURATION)
                 .build();
     }
 
@@ -174,7 +219,7 @@ public class AuthenticationService {
     }
 
     // implement 7th --> authenticate any request with account and password
-    public AuthenticationResponse authenticate(AuthenticationRequest authenticationRequest) {
+    public TokenPair authenticate(AuthenticationRequest authenticationRequest) {
         Account user = accountRepository.findByEmail(authenticationRequest.getEmail()).orElseThrow(
                 () -> new AppException(ErrorCode.INVALID_EMAIL)
         );
@@ -182,10 +227,14 @@ public class AuthenticationService {
         if(!authenticated) {
             throw new AppException(ErrorCode.INVALID_PASSWORD);
         }
-        String token = generateToken(user);
-        return AuthenticationResponse.builder()
-                .token(token)
-                .authenticated(true)
+        String access = generateToken(user);
+        String refresh = generateRefreshToken(user);
+
+        return TokenPair.builder()
+                .accessToken(access)
+                .refreshToken(refresh)
+                .accessTtl(VALID_DURATION)
+                .refreshTtl(REFRESHABLE_DURATION)
                 .build();
     }
 
