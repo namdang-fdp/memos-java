@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useCounterStore } from "@/lib/stores/counterStore";
+import { useCounterStore } from '@/lib/stores/counterStore';
 
 export function Header() {
-  const count = useCounterStore((state) => state.count);
-  return (
-    <header className="w-full p-4 border-b flex justify-between">
-      <span>My App</span>
-      <span>Global count: {count}</span>
-    </header>
-  );
+    const count = useCounterStore((state) => state.count);
+    return (
+        <header className="flex w-full justify-between border-b p-4">
+            <span>My App</span>
+            <span>Global count: {count}</span>
+        </header>
+    );
 }
