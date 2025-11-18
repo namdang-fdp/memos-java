@@ -70,7 +70,8 @@ function isInputNode(
     return node.attributes.node_type === 'input';
 }
 
-function isSecondFactorFlow(flow: LoginFlow): boolean {
+// function to detech there are any aal2 (otp step)
+export function isSecondFactorFlow(flow: LoginFlow): boolean {
     if (flow.requested_aal === 'aal2') return true;
     const nodes = flow.ui.nodes as UiNode[];
     return nodes.some((n) => n.group === 'code');
@@ -166,6 +167,9 @@ export const useFacebookLogin = (flow: LoginFlow | null) => {
     };
 };
 
+// after login with facebook successfully, one more time get the login flow data
+// that data will contain the step aal2 (send otp)
+// catch that state and redirect to page /auth/otp
 export const useSecondFactorRedirect = (flow: LoginFlow | null) => {
     const router = useRouter();
     useEffect(() => {
