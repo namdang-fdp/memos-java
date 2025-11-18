@@ -122,7 +122,6 @@ export function SendCode({ email, flow, onNext }: SendCodeProps) {
                                                 <div className="relative">
                                                     <input
                                                         {...field}
-                                                        placeholder={email}
                                                         disabled
                                                         className="bg-secondary/50 text-foreground/80 border-border/50 w-full rounded-lg border px-4 py-3 text-sm font-medium disabled:opacity-60"
                                                     />
