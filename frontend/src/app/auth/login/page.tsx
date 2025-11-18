@@ -1,5 +1,6 @@
 'use client';
 
+import { LoadingSpinner } from '@/components/loading-spinner';
 import { Button } from '@/components/ui/button';
 import {
     Form,
@@ -161,7 +162,7 @@ export default function LoginPage() {
     if (isFlowLoading || !flow) {
         return (
             <div className="flex min-h-screen items-center justify-center">
-                <span>Loading…</span>
+                <LoadingSpinner size="lg" showText={false} />
             </div>
         );
     }
@@ -169,7 +170,7 @@ export default function LoginPage() {
     if (isSecondFactorFlow(flow)) {
         return (
             <div className="flex min-h-screen items-center justify-center">
-                <span>Redirecting to second factor…</span>
+                <LoadingSpinner size="lg" showText={false} />
             </div>
         );
     }
