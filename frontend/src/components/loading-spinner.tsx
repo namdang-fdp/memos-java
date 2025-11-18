@@ -27,7 +27,7 @@ export function LoadingSpinner({
                 <div
                     className={cn(
                         'absolute rounded-full',
-                        'bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20',
+                        'bg-linear-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20',
                         'blur-xl',
                         sizeClasses[size],
                     )}
