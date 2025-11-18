@@ -15,21 +15,22 @@ interface SendCodeProps {
 }
 
 export function SendCode({ email, flow, onNext }: SendCodeProps) {
-    const [isLoading, setIsLoading] = useState(false);
     const [isSent, setIsSent] = useState(false);
 
-    const { form: sendCodeForm } = useSendOtpCode();
-    const handleSubmit = () => {
-        // setIsLoading(true);
-        // try {
-        //     await onSendCode(data.email);
-        //     // Transition to verify step
-        //     if (onNext) {
-        //         onNext();
-        //     }
-        // } finally {
-        //     setIsLoading(false);
-        // }
+    const {
+        form: sendCodeForm,
+        sendCode,
+        isLoading,
+    } = useSendOtpCode(flow, email);
+
+    const handleSubmit = async () => {
+        try {
+            await sendCode();
+            setIsSent(true);
+            onNext?.();
+        } catch (error) {
+            console.error('Send code error', error);
+        }
     };
 
     return (
