@@ -36,10 +36,10 @@ export function SendCode({ email, flow, onNext }: SendCodeProps) {
     return (
         <Card className="mx-auto w-full max-w-5xl overflow-hidden border-0 shadow-2xl">
             <div className="grid min-h-[700px] grid-cols-1 lg:grid-cols-2">
-                <div className="from-primary/10 via-primary/5 to-secondary/10 hidden items-center justify-center bg-gradient-to-br p-12 lg:flex">
+                <div className="from-primary/10 via-primary/5 to-secondary/10 hidden items-center justify-center bg-linear-to-br p-12 lg:flex">
                     <div className="space-y-8 text-center">
                         <div className="space-y-6">
-                            <div className="from-primary/30 to-primary/10 inline-flex items-center justify-center rounded-3xl bg-gradient-to-br p-6 backdrop-blur">
+                            <div className="from-primary/30 to-primary/10 inline-flex items-center justify-center rounded-3xl bg-linear-to-br p-6 backdrop-blur">
                                 <Shield className="text-primary h-20 w-20" />
                             </div>
                             <div className="space-y-3">
@@ -54,19 +54,19 @@ export function SendCode({ email, flow, onNext }: SendCodeProps) {
                         </div>
                         <div className="space-y-4 pt-6">
                             <div className="text-muted-foreground flex items-center gap-4 text-base">
-                                <div className="bg-primary/20 text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold">
+                                <div className="bg-primary/20 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
                                     1
                                 </div>
                                 <span>Send code to your email</span>
                             </div>
                             <div className="text-muted-foreground flex items-center gap-4 text-base">
-                                <div className="bg-primary/20 text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold">
+                                <div className="bg-primary/20 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
                                     2
                                 </div>
                                 <span>Enter the code here</span>
                             </div>
                             <div className="text-muted-foreground flex items-center gap-4 text-base">
-                                <div className="bg-primary/20 text-primary flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold">
+                                <div className="bg-primary/20 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
                                     3
                                 </div>
                                 <span>Verify your identity</span>
@@ -79,7 +79,7 @@ export function SendCode({ email, flow, onNext }: SendCodeProps) {
                     <div className="w-full space-y-10">
                         <div className="space-y-4 text-center lg:text-left">
                             <div className="mb-6 flex justify-center lg:hidden">
-                                <div className="from-primary/20 to-primary/5 rounded-3xl bg-gradient-to-br p-4">
+                                <div className="from-primary/20 to-primary/5 rounded-3xl bg-linear-to-br p-4">
                                     <Shield className="text-primary h-10 w-10" />
                                 </div>
                             </div>
@@ -95,7 +95,7 @@ export function SendCode({ email, flow, onNext }: SendCodeProps) {
 
                         {isSent && (
                             <div className="bg-primary/5 border-primary/20 animate-in fade-in slide-in-from-bottom-2 flex items-center gap-4 rounded-xl border p-5">
-                                <Mail className="text-primary h-6 w-6 flex-shrink-0" />
+                                <Mail className="text-primary h-6 w-6 shrink-0" />
                                 <div className="text-foreground text-base font-medium">
                                     Code sent to
                                     <br />
@@ -134,9 +134,9 @@ export function SendCode({ email, flow, onNext }: SendCodeProps) {
                                 <Button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="group from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground relative flex h-16 w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-r text-base font-semibold transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="group from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground relative flex h-16 w-full items-center justify-center overflow-hidden rounded-lg bg-linear-to-r text-base font-semibold transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                    <div className="absolute inset-0 -skew-x-12 transform bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                                    <div className="absolute inset-0 -skew-x-12 transform bg-linear-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
 
                                     <div className="relative flex w-full items-center justify-between gap-4 px-6">
                                         {isLoading ? (
@@ -154,7 +154,7 @@ export function SendCode({ email, flow, onNext }: SendCodeProps) {
                                                         {email}
                                                     </span>
                                                 </div>
-                                                <ArrowRight className="h-5 w-5 flex-shrink-0" />
+                                                <ArrowRight className="h-5 w-5 shrink-0" />
                                             </>
                                         )}
                                     </div>

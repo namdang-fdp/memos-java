@@ -11,6 +11,8 @@ import {
     NodeType,
     SendCodeForm,
     sendCodeSchema,
+    VerifyOtpForm,
+    verifyOtpSchema,
 } from './type';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -293,6 +295,53 @@ export const useSendOtpCode = (flow: LoginFlow, email?: string) => {
         form,
         sendCode: mutation.mutateAsync,
         isLoading: mutation.isPending,
+    };
+};
+
+export const useVerifyOtpCode = (flow: LoginFlow) => {
+    const mutation = useMutation({
+        mutationFn: async (code: string) => {
+            if (!flow) {
+                console.log('Missing flow in verify OTP code');
+            }
+            // csrf_token
+            const csrfAttr = findNode(flow, 'default', 'csrf_token', 'input');
+            if (!csrfAttr || typeof csrfAttr.value !== 'string') {
+                throw new Error('Missing csrf_token');
+            }
+
+            // method: code
+            const methodAttr = findNode(flow, 'code', 'method', 'input');
+            const methodValue =
+                (methodAttr &&
+                    typeof methodAttr.value === 'string' &&
+                    methodAttr.value) ||
+                'code';
+
+            const { data } = await oryFetcher.updateLoginFlow({
+                flow: flow.id,
+                updateLoginFlowBody: {
+                    method: methodValue as 'code',
+                    csrf_token: csrfAttr.value,
+                    code,
+                },
+            });
+
+            return data;
+        },
+    });
+    const form = useForm<VerifyOtpForm>({
+        resolver: zodResolver(verifyOtpSchema),
+        mode: 'onChange',
+        defaultValues: {
+            code: '',
+        },
+    });
+
+    return {
+        form,
+        verifyCode: mutation.mutateAsync,
+        isVerifying: mutation.isPending,
     };
 };
 
