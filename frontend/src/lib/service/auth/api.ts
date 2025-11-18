@@ -68,21 +68,16 @@ export const useOrySecondFactorFlow = () => {
 
     useEffect(() => {
         if (!flowId) return;
-        setLoading(true);
         oryFetcher
             .getLoginFlow({ id: flowId })
             .then(({ data }) => setFlow(data))
             .finally(() => setLoading(false));
-    }, [flowId]);
+    }, [flowId, setFlow, setLoading]);
 
     const email = useMemo(() => {
         if (!flow) return '';
 
-        const emailNode =
-            findNode(flow, 'code', 'email', 'input') ??
-            findNode(flow, 'code', 'identifier', 'input') ??
-            null;
-
+        const emailNode = findNode(flow, 'code', 'address', 'input');
         if (emailNode && typeof emailNode.value === 'string') {
             return emailNode.value;
         }
@@ -218,9 +213,6 @@ export const useSecondFactorRedirect = (flow: LoginFlow | null) => {
 export const useSendOtpCode = () => {
     const form = useForm<SendCodeForm>({
         resolver: zodResolver(sendCodeSchema),
-        defaultValues: {
-            email: 'a@example.com',
-        },
     });
 
     return { form };
