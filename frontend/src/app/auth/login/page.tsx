@@ -9,12 +9,14 @@ import {
     FormMessage,
 } from '@/components/ui/form';
 import {
+    isSecondFactorFlow,
     LoginFormValues,
     useFacebookLogin,
     useLogin,
     useOryLoginFlow,
     useSecondFactorRedirect,
 } from '@/lib/service/auth';
+import { LoginFlow } from '@ory/client';
 import Image from 'next/image';
 import React, { forwardRef, InputHTMLAttributes, useState } from 'react';
 
@@ -155,6 +157,23 @@ export default function LoginPage() {
     const { canFacebookLogin, loginWithFacebook } = useFacebookLogin(flow);
 
     useSecondFactorRedirect(flow);
+
+    if (isFlowLoading || !flow) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <span>Loading…</span>
+            </div>
+        );
+    }
+
+    if (isSecondFactorFlow(flow)) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <span>Redirecting to second factor…</span>
+            </div>
+        );
+    }
+
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();
         setMousePosition({
@@ -179,9 +198,8 @@ export default function LoginPage() {
                     onMouseLeave={() => setIsHovering(false)}
                 >
                     <div
-                        className={`pointer-events-none absolute h-[500px] w-[500px] rounded-full bg-gradient-to-r from-purple-300/25 via-blue-300/25 to-pink-300/25 blur-3xl transition-opacity duration-200 ${
-                            isHovering ? 'opacity-100' : 'opacity-0'
-                        }`}
+                        className={`pointer-events-none absolute h-[500px] w-[500px] rounded-full bg-gradient-to-r from-purple-300/25 via-blue-300/25 to-pink-300/25 blur-3xl transition-opacity duration-200 ${isHovering ? 'opacity-100' : 'opacity-0'
+                            }`}
                         style={{
                             transform: `translate(${mousePosition.x - 250}px, ${mousePosition.y - 250}px)`,
                             transition: 'transform 0.1s ease-out',
@@ -219,7 +237,7 @@ export default function LoginPage() {
                                                 }}
                                                 disabled={
                                                     social.name ===
-                                                        'Facebook' &&
+                                                    'Facebook' &&
                                                     (isFlowLoading ||
                                                         !canFacebookLogin)
                                                 }
