@@ -21,3 +21,6 @@ jwt:
   issuer: ${JWT_ISSUER}
   audience: ${JWT_AUDIENCE}
   clock-skew-seconds: ${JWT_CLOCK_SKEW_SECONDS}
+
+ory:
+  public-url: ${ORY_PUBLIC_URL}
