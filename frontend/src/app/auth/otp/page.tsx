@@ -5,6 +5,7 @@ import { SendCode } from './send-code';
 import { VerifyOtp } from './otp-input';
 import { useOrySecondFactorFlow } from '@/lib/service/auth';
 import { LoadingSpinner } from '@/components/loading-spinner';
+
 type Step = 'send' | 'verify';
 
 export default function Home() {
@@ -14,7 +15,7 @@ export default function Home() {
     if (loading || !flow) {
         return (
             <div className="flex min-h-screen items-center justify-center">
-                <LoadingSpinner size="lg" text={false} />
+                <LoadingSpinner size="lg" showText={false} />
             </div>
         );
     }
@@ -43,7 +44,7 @@ export default function Home() {
                 {step === 'send' && (
                     <SendCode
                         email={email}
-                        onSendCode={handleSendCode}
+                        flow={flow}
                         onNext={() => setStep('verify')}
                     />
                 )}

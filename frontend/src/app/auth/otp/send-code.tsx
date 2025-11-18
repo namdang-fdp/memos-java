@@ -6,18 +6,15 @@ import { Card } from '@/components/ui/card';
 import { Loader2, Mail, Shield, ArrowRight } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem } from '@/components/ui/form';
 import { useSendOtpCode } from '@/lib/service/auth';
+import { LoginFlow } from '@ory/client';
 
 interface SendCodeProps {
     email?: string;
-    onSendCode: (email: string) => Promise<void>;
+    flow: LoginFlow;
     onNext?: () => void;
 }
 
-export function SendCode({
-    email = 'user@example.com',
-    onSendCode,
-    onNext,
-}: SendCodeProps) {
+export function SendCode({ email, flow, onNext }: SendCodeProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [isSent, setIsSent] = useState(false);
 
@@ -102,7 +99,7 @@ export function SendCode({
                                     Code sent to
                                     <br />
                                     <span className="text-primary font-semibold">
-                                        {sendCodeForm.getValues('email')}
+                                        {email}
                                     </span>
                                 </div>
                             </div>
@@ -124,6 +121,7 @@ export function SendCode({
                                                 <div className="relative">
                                                     <input
                                                         {...field}
+                                                        placeholder={email}
                                                         disabled
                                                         className="bg-secondary/50 text-foreground/80 border-border/50 w-full rounded-lg border px-4 py-3 text-sm font-medium disabled:opacity-60"
                                                     />
@@ -153,9 +151,7 @@ export function SendCode({
                                                         Send code to
                                                     </span>
                                                     <span className="max-w-xs text-base leading-tight font-bold">
-                                                        {sendCodeForm.getValues(
-                                                            'email',
-                                                        )}
+                                                        {email}
                                                     </span>
                                                 </div>
                                                 <ArrowRight className="h-5 w-5 flex-shrink-0" />
