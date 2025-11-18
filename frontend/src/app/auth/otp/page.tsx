@@ -3,13 +3,21 @@
 import { useState } from 'react';
 import { SendCode } from './send-code';
 import { VerifyOtp } from './otp-input';
-
+import { useOrySecondFactorFlow } from '@/lib/service/auth';
+import { LoadingSpinner } from '@/components/loading-spinner';
 type Step = 'send' | 'verify';
 
 export default function Home() {
+    const { flow, email, loading } = useOrySecondFactorFlow();
     const [step, setStep] = useState<Step>('send');
-    const [email] = useState('temnguyvanamdang@gmail.com');
 
+    if (loading || !flow) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <LoadingSpinner size="lg" text={false} />
+            </div>
+        );
+    }
     const handleSendCode = async (sendEmail: string) => {
         // Simulate API call
         await new Promise((resolve) => setTimeout(resolve, 1500));
