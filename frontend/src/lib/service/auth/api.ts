@@ -93,6 +93,7 @@ export function findNode<TType extends NodeType>(
 }
 
 export const useFacebookLogin = (flow: LoginFlow | null) => {
+    // get the facebook oidc node, action, method
     const facebookData = useMemo<FacebookData | null>(() => {
         if (!flow || !flow.ui?.action) return null;
 
@@ -119,7 +120,7 @@ export const useFacebookLogin = (flow: LoginFlow | null) => {
             csrfToken: csrfAttr.value,
         };
     }, [flow]);
-
+    // create the hidden form that submit follow the json that Ory given back
     const loginWithFacebook = () => {
         if (!facebookData) {
             console.warn('Facebook login data not ready yet');
