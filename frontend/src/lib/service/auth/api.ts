@@ -210,12 +210,64 @@ export const useSecondFactorRedirect = (flow: LoginFlow | null) => {
     }, [flow, router]);
 };
 
-export const useSendOtpCode = () => {
+// hook for send otp code through ory
+// ory need something to send code:
+// 1. csrf token
+// 2. address
+// 3. method
+// all of them is exist in LoginFlow (isSecondFactorFlow) if successfully fetch that flow
+export const useSendOtpCode = (flow: LoginFlow, email?: string) => {
+    const mutation = useMutation({
+        mutationFn: async () => {
+            if (!flow) {
+                console.log('Missing login flow for OTP');
+            }
+
+            // find csrf
+            const csrfAttr = findNode(flow, 'default', 'csrf_token', 'input');
+            if (!csrfAttr || typeof csrfAttr.value !== 'string') {
+                console.log('Missing csrf_token');
+            }
+
+            // find address
+            const addressAttr = findNode(flow, 'code', 'address', 'input');
+            const addressValue =
+                email ??
+                (addressAttr && typeof addressAttr.value === 'string'
+                    ? addressAttr.value
+                    : undefined);
+
+            if (!addressValue) {
+                throw new Error('Missing address (email) for OTP');
+            }
+
+            // find method
+            const methodAttr = findNode(flow, 'code', 'method', 'input');
+            const methodValue =
+                (methodAttr &&
+                    typeof methodAttr.value === 'string' &&
+                    methodAttr.value) ||
+                'code';
+
+            await oryFetcher.updateLoginFlow({
+                flow: flow.id,
+                updateLoginFlowBody: {
+                    method: methodValue as 'code',
+                    csrf_token: csrfAttr?.value,
+                    address: addressValue,
+                },
+            });
+        },
+    });
     const form = useForm<SendCodeForm>({
         resolver: zodResolver(sendCodeSchema),
     });
 
-    return { form };
+    return {
+        form,
+        sendCode: mutation.mutateAsync,
+        isLoading: mutation.isPending,
+    };
 };
 
 // login with username and password
