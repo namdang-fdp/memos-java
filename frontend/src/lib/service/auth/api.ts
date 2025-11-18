@@ -2,19 +2,17 @@
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import {
+    AttrByType,
+    FacebookData,
     LoginFormValues,
     LoginPayload,
     LoginResponse,
     loginSchema,
+    NodeType,
 } from './type';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-    LoginFlow,
-    UiNode,
-    UiNodeAttributes,
-    UiNodeInputAttributes,
-} from '@ory/client';
+import { LoginFlow, UiNode } from '@ory/client';
 import { useEffect, useMemo, useState } from 'react';
 import { oryFetcher } from '@/lib/api/ory';
 
@@ -57,38 +55,49 @@ export const useOryLoginFlow = () => {
     return { flow, isLoading };
 };
 
-// login facebook ory flow
-// after successfully get the flow data, find the node facebook's OIDC node
-// get the href and redirect
+// after successfully get a flow
+// a flow contain it attributes and the field "ui" that is the form that we need to submit
+// in the ui field, there are an array of nodes those are the fields of the form
+// as the facebook login, we need to find the "input" node of 'oidc' group
 
-function isInputAttributes(
-    attrs: UiNodeAttributes,
-): attrs is UiNodeInputAttributes {
-    return (attrs as UiNodeInputAttributes).node_type === 'input';
+// this is the function is checked that whether the node is input
+// if the node is input, it will have the field name (provider facebook) for the next step
+function isInputNode(
+    node: UiNode,
+): node is UiNode & { attributes: AttrByType<'input'> } {
+    return node.attributes.node_type === 'input';
 }
 
-function findInputNode(
+// find the node in Flow with group,name,type
+export function findNode<TType extends NodeType>(
     flow: LoginFlow,
     group: string,
     name: string,
-): UiNodeInputAttributes | null {
-    const node = (flow.ui.nodes as UiNode[]).find(
-        (n) =>
-            n.group === group &&
-            isInputAttributes(n.attributes) &&
-            n.attributes.name === name,
-    );
+    type: TType,
+): AttrByType<TType> | null {
+    const nodes = flow.ui.nodes as UiNode[];
+    for (const n of nodes) {
+        if (n.group !== group) continue;
+        if (n.attributes.node_type !== type) continue;
 
-    return node ? (node.attributes as UiNodeInputAttributes) : null;
+        if (type === 'input' && isInputNode(n)) {
+            if (n.attributes.name === name) {
+                return n.attributes as AttrByType<TType>;
+            }
+        }
+        if (type !== 'input') {
+            return n.attributes as AttrByType<TType>;
+        }
+    }
+    return null;
 }
-export const useFacebookLogin = (flow: LoginFlow | null) => {
-    const facebookData = useMemo(() => {
-        if (!flow) return null;
 
-        // 1) node OIDC: provider
-        const providerAttr = findInputNode(flow, 'oidc', 'provider');
-        // 2) node default: csrf_token
-        const csrfAttr = findInputNode(flow, 'default', 'csrf_token');
+export const useFacebookLogin = (flow: LoginFlow | null) => {
+    const facebookData = useMemo<FacebookData | null>(() => {
+        if (!flow || !flow.ui?.action) return null;
+
+        const providerAttr = findNode(flow, 'oidc', 'provider', 'input');
+        const csrfAttr = findNode(flow, 'default', 'csrf_token', 'input');
 
         if (
             !providerAttr ||
@@ -98,15 +107,15 @@ export const useFacebookLogin = (flow: LoginFlow | null) => {
         ) {
             console.warn(
                 'Missing OIDC provider or CSRF token node',
-                flow.ui.nodes,
+                flow.ui?.nodes,
             );
             return null;
         }
 
         return {
-            action: flow.ui.action, // URL submit form
+            action: flow.ui.action,
             method: (flow.ui.method || 'POST').toUpperCase(),
-            providerValue: providerAttr.value, // "facebook-...."
+            providerValue: providerAttr.value,
             csrfToken: csrfAttr.value,
         };
     }, [flow]);
@@ -119,19 +128,16 @@ export const useFacebookLogin = (flow: LoginFlow | null) => {
 
         const { action, method, providerValue, csrfToken } = facebookData;
 
-        // Tạo form ẩn và submit như UI Ory
         const form = document.createElement('form');
         form.method = method;
         form.action = action;
 
-        // csrf_token
         const csrfInput = document.createElement('input');
         csrfInput.type = 'hidden';
         csrfInput.name = 'csrf_token';
         csrfInput.value = csrfToken;
         form.appendChild(csrfInput);
 
-        // provider (facebook-...)
         const providerInput = document.createElement('input');
         providerInput.type = 'hidden';
         providerInput.name = 'provider';
@@ -139,7 +145,7 @@ export const useFacebookLogin = (flow: LoginFlow | null) => {
         form.appendChild(providerInput);
 
         document.body.appendChild(form);
-        form.submit(); // Browser POST -> Ory -> Facebook -> quay lại app
+        form.submit();
     };
 
     return {
