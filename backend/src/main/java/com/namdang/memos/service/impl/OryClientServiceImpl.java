@@ -1,6 +1,7 @@
 package com.namdang.memos.service.impl;
 
 import com.namdang.memos.config.OryConfig;
+import com.namdang.memos.dto.responses.ory.OryResponse;
 import com.namdang.memos.service.OryClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,11 +20,11 @@ public class OryClientServiceImpl implements OryClientService {
     private final RestTemplate restTemplate;
 
     @Override
-    public ResponseEntity<String> callWhoAmI(String cookie) {
+    public ResponseEntity<OryResponse> callWhoAmI(String cookie) {
         String url = oryConfig.getPublicUrl() + "/sessions/whoami";
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.COOKIE, cookie);
         HttpEntity<Void> request = new HttpEntity<>(headers);
-        return restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        return restTemplate.exchange(url, HttpMethod.GET, request, OryResponse.class);
     }
 }
