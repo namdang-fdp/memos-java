@@ -17,6 +17,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { LoginFlow, UiNode } from '@ory/client';
 import { useEffect, useMemo, useState } from 'react';
 import { oryFetcher } from '@/lib/api/ory';
+import { AxiosError } from 'axios';
 
 // ory flow hook logic
 // first user access to /auth/login. If the params already have ?flow="" (ory unique flow id)
@@ -248,20 +249,45 @@ export const useSendOtpCode = (flow: LoginFlow, email?: string) => {
                     typeof methodAttr.value === 'string' &&
                     methodAttr.value) ||
                 'code';
+            // some special logic here, ory still send code to gmail
+            // but the form state or http code is 400 (bad request)
+            // because in this case we just send otp not input otp
+            // so that, we must catch the axios to be success if state is sent_email for next step
+            try {
+                const { data } = await oryFetcher.updateLoginFlow({
+                    flow: flow.id,
+                    updateLoginFlowBody: {
+                        method: methodValue as 'code',
+                        csrf_token: csrfAttr?.value,
+                        address: addressValue,
+                    },
+                });
+                return data;
+            } catch (err) {
+                const axiosErr = err as AxiosError<LoginFlow>;
+                const status = axiosErr.response?.status;
+                const flowData = axiosErr.response?.data;
 
-            await oryFetcher.updateLoginFlow({
-                flow: flow.id,
-                updateLoginFlowBody: {
-                    method: methodValue as 'code',
-                    csrf_token: csrfAttr?.value,
-                    address: addressValue,
-                },
-            });
+                if (status === 400 && flowData?.state === 'sent_email') {
+                    return flowData;
+                }
+                throw err;
+            }
         },
     });
+
     const form = useForm<SendCodeForm>({
         resolver: zodResolver(sendCodeSchema),
+        defaultValues: {
+            email: email ?? '',
+        },
     });
+
+    useEffect(() => {
+        if (email) {
+            form.setValue('email', email, { shouldValidate: false });
+        }
+    }, [email, form]);
 
     return {
         form,
