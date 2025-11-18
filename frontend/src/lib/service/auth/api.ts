@@ -298,6 +298,10 @@ export const useSendOtpCode = (flow: LoginFlow, email?: string) => {
     };
 };
 
+// in this flow, we one more time get LoginFlow, but this time the ui node of flow is code
+// this is the flow for input otp
+// get the flow csrf and method, after that send the code that users input
+// if success the data that flow response will include the sessions of user (successfully)
 export const useVerifyOtpCode = (flow: LoginFlow) => {
     const mutation = useMutation({
         mutationFn: async (code: string) => {
