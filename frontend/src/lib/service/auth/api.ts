@@ -57,6 +57,41 @@ export const useOryLoginFlow = () => {
     return { flow, isLoading };
 };
 
+// hook to get the second flow (MFA) and find the email node, send to page
+// for the send otp to email step
+export const useOrySecondFactorFlow = () => {
+    const searchParams = useSearchParams();
+    const flowId = searchParams.get('flow');
+
+    const [flow, setFlow] = useState<LoginFlow | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!flowId) return;
+        setLoading(true);
+        oryFetcher
+            .getLoginFlow({ id: flowId })
+            .then(({ data }) => setFlow(data))
+            .finally(() => setLoading(false));
+    }, [flowId]);
+
+    const email = useMemo(() => {
+        if (!flow) return '';
+
+        const emailNode =
+            findNode(flow, 'code', 'email', 'input') ??
+            findNode(flow, 'code', 'identifier', 'input') ??
+            null;
+
+        if (emailNode && typeof emailNode.value === 'string') {
+            return emailNode.value;
+        }
+
+        return '';
+    }, [flow]);
+
+    return { flow, email, loading };
+};
 // after successfully get a flow
 // a flow contain it attributes and the field "ui" that is the form that we need to submit
 // in the ui field, there are an array of nodes those are the fields of the form
