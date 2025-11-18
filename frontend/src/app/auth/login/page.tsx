@@ -1,8 +1,19 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { LoginFormValues, useLogin } from '@/lib/service/auth';
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormMessage,
+} from '@/components/ui/form';
+import {
+    LoginFormValues,
+    useFacebookLogin,
+    useLogin,
+    useOryLoginFlow,
+} from '@/lib/service/auth';
 import Image from 'next/image';
 import React, { forwardRef, InputHTMLAttributes, useState } from 'react';
 
@@ -11,7 +22,11 @@ const socialIcons = [
         name: 'Google',
         href: '#',
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="h-5 w-5">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 48 48"
+                className="h-5 w-5"
+            >
                 <path
                     fill="#fbc02d"
                     d="M43.6 20.5H42V20H24v8h11.3A11.9 11.9 0 0 1 12 24 12 12 0 0 1 24 12c3.1 0 5.9 1.2 7.9 3.1l5.7-5.7A19.9 19.9 0 0 0 24 4 20 20 0 1 0 44 24c0-1.2-.1-2.3-.4-3.5"
@@ -35,7 +50,11 @@ const socialIcons = [
         name: 'Facebook',
         href: '#',
         icon: (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="h-5 w-5"
+            >
                 <path
                     fill="currentColor"
                     d="M13 21v-7h2.5l.5-3H13V9.5C13 8.57 13.57 8 14.5 8H16V5h-1.5A4.5 4.5 0 0 0 10 9.5V11H8v3h2v7z"
@@ -62,72 +81,77 @@ interface AppInputProps extends InputHTMLAttributes<HTMLInputElement> {
     icon?: React.ReactNode;
 }
 
-const AppInput = forwardRef<HTMLInputElement, AppInputProps>(
-    (props, ref) => {
-        const { label, placeholder, icon, ...rest } = props;
-        const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-        const [isHovering, setIsHovering] = useState(false);
+const AppInput = forwardRef<HTMLInputElement, AppInputProps>((props, ref) => {
+    const { label, placeholder, icon, ...rest } = props;
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+    const [isHovering, setIsHovering] = useState(false);
 
-        const handleMouseMove = (e: React.MouseEvent<HTMLInputElement>) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            setMousePosition({
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top,
-            });
-        };
+    const handleMouseMove = (e: React.MouseEvent<HTMLInputElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setMousePosition({
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+        });
+    };
 
-        return (
-            <div className="relative w-full min-w-[200px]">
-                {label && <label className="mb-2 block text-sm">{label}</label>}
-                <div className="relative w-full">
-                    <input
-                        ref={ref}
-                        className="peer relative z-10 h-[3.25rem] w-full rounded-md border border-input bg-card px-4 text-sm text-foreground outline-none shadow-sm transition-colors duration-200 ease-in-out placeholder:text-muted-foreground focus:bg-background"
-                        placeholder={placeholder}
-                        onMouseMove={handleMouseMove}
-                        onMouseEnter={() => setIsHovering(true)}
-                        onMouseLeave={() => setIsHovering(false)}
-                        {...rest}
-                    />
+    return (
+        <div className="relative w-full min-w-[200px]">
+            {label && <label className="mb-2 block text-sm">{label}</label>}
+            <div className="relative w-full">
+                <input
+                    ref={ref}
+                    className="peer border-input bg-card text-foreground placeholder:text-muted-foreground focus:bg-background relative z-10 h-[3.25rem] w-full rounded-md border px-4 text-sm shadow-sm transition-colors duration-200 ease-in-out outline-none"
+                    placeholder={placeholder}
+                    onMouseMove={handleMouseMove}
+                    onMouseEnter={() => setIsHovering(true)}
+                    onMouseLeave={() => setIsHovering(false)}
+                    {...rest}
+                />
 
-                    {isHovering && (
-                        <>
-                            <div
-                                className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[2px] overflow-hidden rounded-t-md"
-                                style={{
-                                    background: `radial-gradient(30px circle at ${mousePosition.x}px 0px, var(--color-text-primary) 0%, transparent 70%)`,
-                                }}
-                            />
-                            <div
-                                className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-[2px] overflow-hidden rounded-b-md"
-                                style={{
-                                    background: `radial-gradient(30px circle at ${mousePosition.x}px 2px, var(--color-text-primary) 0%, transparent 70%)`,
-                                }}
-                            />
-                        </>
-                    )}
+                {isHovering && (
+                    <>
+                        <div
+                            className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[2px] overflow-hidden rounded-t-md"
+                            style={{
+                                background: `radial-gradient(30px circle at ${mousePosition.x}px 0px, var(--color-text-primary) 0%, transparent 70%)`,
+                            }}
+                        />
+                        <div
+                            className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-[2px] overflow-hidden rounded-b-md"
+                            style={{
+                                background: `radial-gradient(30px circle at ${mousePosition.x}px 2px, var(--color-text-primary) 0%, transparent 70%)`,
+                            }}
+                        />
+                    </>
+                )}
 
-                    {icon && (
-                        <div className="absolute right-3 top-1/2 z-20 -translate-y-1/2">
-                            {icon}
-                        </div>
-                    )}
-                </div>
+                {icon && (
+                    <div className="absolute top-1/2 right-3 z-20 -translate-y-1/2">
+                        {icon}
+                    </div>
+                )}
             </div>
-        );
-    },
-);
+        </div>
+    );
+});
 
 AppInput.displayName = 'AppInput';
 
 export default function LoginPage() {
-    const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({
+    const [mousePosition, setMousePosition] = useState<{
+        x: number;
+        y: number;
+    }>({
         x: 0,
         y: 0,
     });
     const [isHovering, setIsHovering] = useState(false);
 
     const { form: loginForm, mutation: loginMutation } = useLogin();
+
+    const { flow, isLoading: isFlowLoading } = useOryLoginFlow();
+
+    const { canFacebookLogin, loginWithFacebook } = useFacebookLogin(flow);
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();
@@ -153,8 +177,9 @@ export default function LoginPage() {
                     onMouseLeave={() => setIsHovering(false)}
                 >
                     <div
-                        className={`pointer-events-none absolute h-[500px] w-[500px] rounded-full bg-gradient-to-r from-purple-300/25 via-blue-300/25 to-pink-300/25 blur-3xl transition-opacity duration-200 ${isHovering ? 'opacity-100' : 'opacity-0'
-                            }`}
+                        className={`pointer-events-none absolute h-[500px] w-[500px] rounded-full bg-gradient-to-r from-purple-300/25 via-blue-300/25 to-pink-300/25 blur-3xl transition-opacity duration-200 ${
+                            isHovering ? 'opacity-100' : 'opacity-0'
+                        }`}
                         style={{
                             transform: `translate(${mousePosition.x - 250}px, ${mousePosition.y - 250}px)`,
                             transition: 'transform 0.1s ease-out',
@@ -163,11 +188,13 @@ export default function LoginPage() {
 
                     <div className="relative z-10 flex flex-col gap-6">
                         <div className="space-y-2 text-left">
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                            <p className="text-muted-foreground text-xs font-semibold tracking-[0.2em] uppercase">
                                 Welcome back
                             </p>
-                            <h1 className="text-3xl font-extrabold md:text-4xl">Sign in</h1>
-                            <p className="text-sm text-muted-foreground">
+                            <h1 className="text-3xl font-extrabold md:text-4xl">
+                                Sign in
+                            </h1>
+                            <p className="text-muted-foreground text-sm">
                                 Enter your credentials to access your account.
                             </p>
                         </div>
@@ -179,7 +206,21 @@ export default function LoginPage() {
                                         <li key={social.name}>
                                             <button
                                                 type="button"
-                                                className="group relative flex h-10 w-10 items-center justify-center rounded-full border border-border bg-[var(--color-bg-2)] shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-[0_0_25px_rgba(255,255,255,0.25)] md:h-11 md:w-11"
+                                                className="group border-border relative flex h-10 w-10 items-center justify-center rounded-full border bg-[var(--color-bg-2)] shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-[0_0_25px_rgba(255,255,255,0.25)] md:h-11 md:w-11"
+                                                onClick={() => {
+                                                    if (
+                                                        social.name ===
+                                                        'Facebook'
+                                                    ) {
+                                                        loginWithFacebook();
+                                                    }
+                                                }}
+                                                disabled={
+                                                    social.name ===
+                                                        'Facebook' &&
+                                                    (isFlowLoading ||
+                                                        !canFacebookLogin)
+                                                }
                                             >
                                                 <span className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/10 via-transparent to-white/5 opacity-0 blur-sm transition-opacity duration-200 group-hover:opacity-100" />
                                                 <span className="relative z-[1] text-[var(--color-text-primary)]">
@@ -190,7 +231,7 @@ export default function LoginPage() {
                                     ))}
                                 </ul>
                             </div>
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-muted-foreground text-sm">
                                 or use your email and password
                             </span>
                         </div>
@@ -240,7 +281,8 @@ export default function LoginPage() {
 
                                 {loginMutation.isError && (
                                     <p className="text-sm text-red-500">
-                                        {(loginMutation.error as Error).message || 'Đăng nhập thất bại'}
+                                        {(loginMutation.error as Error)
+                                            .message || 'Đăng nhập thất bại'}
                                     </p>
                                 )}
 
@@ -251,22 +293,24 @@ export default function LoginPage() {
                                             disabled={isSubmitting}
                                             className="inline-flex items-center justify-center rounded-md bg-white px-6 py-2 text-sm font-semibold text-black shadow-sm transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:bg-neutral-400 disabled:text-neutral-900"
                                         >
-                                            {isSubmitting ? 'Signing in...' : 'Sign In'}
+                                            {isSubmitting
+                                                ? 'Signing in...'
+                                                : 'Sign In'}
                                         </Button>
 
                                         <button
                                             type="button"
-                                            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                                            className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                                         >
                                             Forgot your password?
                                         </button>
                                     </div>
 
-                                    <div className="text-sm text-muted-foreground">
+                                    <div className="text-muted-foreground text-sm">
                                         Don&apos;t have an account?{' '}
                                         <button
                                             type="button"
-                                            className="font-medium text-primary underline-offset-4 hover:underline"
+                                            className="text-primary font-medium underline-offset-4 hover:underline"
                                         >
                                             Sign up
                                         </button>
