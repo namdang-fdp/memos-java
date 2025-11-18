@@ -30,7 +30,7 @@ export type LoginResponse = {
     };
 };
 
-// ------------- Schema ------------------------
+// -------------------- Schema ------------------------
 export const loginSchema = z.object({
     email: z
         .string()
@@ -40,3 +40,9 @@ export const loginSchema = z.object({
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
+
+export const sendCodeSchema = z.object({
+    email: z.string().email('Invalid email address'),
+});
+
+export type SendCodeForm = z.infer<typeof sendCodeSchema>;

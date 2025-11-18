@@ -1,10 +1,8 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
-/* dùng class .dark trên html/body */
 @custom-variant dark (&:is(.dark *));
 
-/* ánh xạ token tailwind -> CSS variable */
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -50,7 +48,6 @@
     --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* ===== Light (fallback) ===== */
 :root {
     color-scheme: light;
 
@@ -98,7 +95,6 @@
     --sidebar-border: oklch(0.92 0.004 286.32);
     --sidebar-ring: oklch(0.705 0.015 286.067);
 
-    /* bridge cho các class bạn đang dùng kiểu bg-[var(--color-bg)] */
     --color-bg: var(--background);
     --color-bg-2: var(--card);
     --color-surface: var(--card);
@@ -110,7 +106,6 @@
     --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.18);
 }
 
-/* ===== Dark theme (mặc định – vì ta sẽ thêm class "dark" trên <html>) ===== */
 .dark {
     color-scheme: dark;
 
@@ -156,7 +151,6 @@
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.552 0.016 285.938);
 
-    /* bridge variables trong dark – vẫn map từ các token trên */
     --color-bg: var(--background);
     --color-bg-2: oklch(0.12 0.005 285.823);
     --color-surface: var(--card);
@@ -168,7 +162,6 @@
     --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.6);
 }
 
-/* ===== Base layer ===== */
 @layer base {
     * {
         @apply border-border outline-ring/50;
@@ -180,7 +173,6 @@
         min-height: 100vh;
     }
 
-    /* input / textarea mặc định dark-friendly */
     input,
     textarea {
         @apply bg-card text-foreground border-input;
@@ -192,7 +184,6 @@
         opacity: 1;
     }
 
-    /* card login, sidebar,… */
     .card {
         background-color: var(--card);
         border-radius: var(--radius-xl);
@@ -200,7 +191,6 @@
     }
 }
 
-/* ===== Autofill fix (Chrome) ===== */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
