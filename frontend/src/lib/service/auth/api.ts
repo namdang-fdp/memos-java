@@ -9,6 +9,8 @@ import {
     LoginResponse,
     loginSchema,
     NodeType,
+    SendCodeForm,
+    sendCodeSchema,
 } from './type';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -68,6 +70,12 @@ function isInputNode(
     return node.attributes.node_type === 'input';
 }
 
+function isSecondFactorFlow(flow: LoginFlow): boolean {
+    if (flow.requested_aal === 'aal2') return true;
+    const nodes = flow.ui.nodes as UiNode[];
+    return nodes.some((n) => n.group === 'code');
+}
+
 // find the node in Flow with group,name,type
 export function findNode<TType extends NodeType>(
     flow: LoginFlow,
@@ -92,6 +100,9 @@ export function findNode<TType extends NodeType>(
     return null;
 }
 
+// what will happen here. After redirect to facebook and user accept to loginWithFacebook
+// ory see that the user need the MFA. they will continue create one more login flow
+// that flow have the state = 'request-aal' and redirect to there own send MFA UI
 export const useFacebookLogin = (flow: LoginFlow | null) => {
     // get the facebook oidc node, action, method
     const facebookData = useMemo<FacebookData | null>(() => {
@@ -153,6 +164,27 @@ export const useFacebookLogin = (flow: LoginFlow | null) => {
         canFacebookLogin: !!facebookData,
         loginWithFacebook,
     };
+};
+
+export const useSecondFactorRedirect = (flow: LoginFlow | null) => {
+    const router = useRouter();
+    useEffect(() => {
+        if (!flow) return;
+        if (!isSecondFactorFlow(flow)) return;
+        const flowId = new URLSearchParams({ flow: flow.id }).toString();
+        router.replace(`/auth/otp?${flowId}`);
+    }, [flow, router]);
+};
+
+export const useSendOtpCode = () => {
+    const form = useForm<SendCodeForm>({
+        resolver: zodResolver(sendCodeSchema),
+        defaultValues: {
+            email: 'a@example.com',
+        },
+    });
+
+    return { form };
 };
 
 // login with username and password
