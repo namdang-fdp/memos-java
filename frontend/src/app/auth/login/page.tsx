@@ -13,6 +13,7 @@ import {
     useFacebookLogin,
     useLogin,
     useOryLoginFlow,
+    useSecondFactorRedirect,
 } from '@/lib/service/auth';
 import Image from 'next/image';
 import React, { forwardRef, InputHTMLAttributes, useState } from 'react';
@@ -153,6 +154,7 @@ export default function LoginPage() {
 
     const { canFacebookLogin, loginWithFacebook } = useFacebookLogin(flow);
 
+    useSecondFactorRedirect(flow);
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();
         setMousePosition({
