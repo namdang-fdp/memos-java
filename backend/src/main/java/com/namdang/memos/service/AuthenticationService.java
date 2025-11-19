@@ -1,7 +1,6 @@
 package com.namdang.memos.service;
 
 import com.namdang.memos.dto.requests.auth.AuthenticationRequest;
-import com.namdang.memos.dto.requests.auth.IntrospectRequest;
 import com.namdang.memos.dto.responses.auth.*;
 import com.namdang.memos.entity.Account;
 import com.namdang.memos.entity.InvalidatedToken;

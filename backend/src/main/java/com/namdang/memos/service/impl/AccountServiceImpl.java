@@ -8,7 +8,7 @@ import com.namdang.memos.entity.Role;
 import com.namdang.memos.enumType.PreDefinedRole;
 import com.namdang.memos.exception.AppException;
 import com.namdang.memos.exception.ErrorCode;
-import com.namdang.memos.mapper.AccountMapper;
+import com.namdang.memos.mapper.auth.AccountMapper;
 import com.namdang.memos.repository.AccountRepository;
 import com.namdang.memos.repository.RoleRepository;
 import com.namdang.memos.service.AccountService;
