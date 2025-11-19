@@ -170,18 +170,33 @@ public class AuthenticationService {
     }
 
     // implement 4th --> func to for user to logout
-    public void logout(LogoutRequest logoutRequest) throws ParseException, JOSEException {
-        try {
-            var signedToken = verifyToken(logoutRequest.getToken(), true);
-            String jit = signedToken.getJWTClaimsSet().getJWTID();
-            Date expiryTime = signedToken.getJWTClaimsSet().getExpirationTime();
+    // revoke both access and refresh token
+    public void logout(String authHeader, String refreshToken)
+            throws ParseException, JOSEException {
 
-            InvalidatedToken invalidatedToken = new InvalidatedToken(jit, expiryTime);
-            invalidatedTokenRepository.save(invalidatedToken);
-        } catch (AppException e) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED_EXCEPTION);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String accessToken = authHeader.substring(7);
+
+            SignedJWT sjwt = verifyToken(accessToken, false);
+            String jti = sjwt.getJWTClaimsSet().getJWTID();
+            Date exp = sjwt.getJWTClaimsSet().getExpirationTime();
+
+            invalidatedTokenRepository.save(
+                    InvalidatedToken.builder().id(jti).expiryTime(exp).build()
+            );
+        }
+
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            SignedJWT sjwt = verifyToken(refreshToken, true);
+            String jti = sjwt.getJWTClaimsSet().getJWTID();
+            Date exp = sjwt.getJWTClaimsSet().getExpirationTime();
+
+            invalidatedTokenRepository.save(
+                    InvalidatedToken.builder().id(jti).expiryTime(exp).build()
+            );
         }
     }
+
 
     // implement 5th --> func to refresh token
     // there are 2 type of token rotation
