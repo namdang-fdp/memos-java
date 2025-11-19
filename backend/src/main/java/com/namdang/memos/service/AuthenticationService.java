@@ -3,10 +3,7 @@ package com.namdang.memos.service;
 import com.namdang.memos.dto.requests.LogoutRequest;
 import com.namdang.memos.dto.requests.auth.AuthenticationRequest;
 import com.namdang.memos.dto.requests.auth.IntrospectRequest;
-import com.namdang.memos.dto.responses.auth.IntrospectResponse;
-import com.namdang.memos.dto.responses.auth.RegisterResponse;
-import com.namdang.memos.dto.responses.auth.RegistrationResult;
-import com.namdang.memos.dto.responses.auth.TokenPair;
+import com.namdang.memos.dto.responses.auth.*;
 import com.namdang.memos.entity.Account;
 import com.namdang.memos.entity.InvalidatedToken;
 import com.namdang.memos.entity.Role;
@@ -235,24 +232,37 @@ public class AuthenticationService {
         return IntrospectResponse.builder().valid(valid).build();
     }
 
-    public TokenPair authenticate(AuthenticationRequest authenticationRequest) {
-        Account user = accountRepository.findByEmail(authenticationRequest.getEmail()).orElseThrow(
-                () -> new AppException(ErrorCode.INVALID_EMAIL)
-        );
+    // in AuthenticationService (injected: LoginMapper loginMapper)
+    public LoginResult authenticate(AuthenticationRequest authenticationRequest) {
+        Account user = accountRepository.findByEmail(authenticationRequest.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_EMAIL));
+
         boolean authenticated = passwordEncoder.matches(authenticationRequest.getPassword(), user.getPassword());
-        if(!authenticated) {
+        if (!authenticated) {
             throw new AppException(ErrorCode.INVALID_PASSWORD);
         }
+
         String access = generateToken(user);
         String refresh = generateRefreshToken(user);
 
-        return TokenPair.builder()
+        TokenPair pair = TokenPair.builder()
                 .accessToken(access)
                 .refreshToken(refresh)
                 .accessTtl(VALID_DURATION)
                 .refreshTtl(REFRESHABLE_DURATION)
                 .build();
+
+        String primaryRole = null;
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+            primaryRole = user.getRoles().iterator().next().getName();
+        }
+        return LoginResult.builder()
+                .tokenPair(pair)
+                .role(primaryRole)
+                .build();
     }
+
+
 
     @Transactional
     public RegistrationResult register(AuthenticationRequest request) {
