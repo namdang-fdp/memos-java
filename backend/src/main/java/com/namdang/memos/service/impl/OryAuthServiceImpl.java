@@ -49,7 +49,6 @@ public class OryAuthServiceImpl implements OryAuthService {
         String cookie = cookieName + "=" + cookieValue;
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.COOKIE, cookie);
-        System.out.println(headers);
         HttpEntity<Void> request = new HttpEntity<>(headers);
         return restTemplate.exchange(url, HttpMethod.GET, request, OryResponse.class);
     }
@@ -70,6 +69,7 @@ public class OryAuthServiceImpl implements OryAuthService {
                 || session.getIdentity().getTraits().getEmail() == null) {
             throw new AppException(ErrorCode.INVALID_ORY_COOKIES);
         }
+        System.out.println(session);
 
         String identityId = session.getIdentity().getId();
         String email = session.getIdentity().getTraits().getEmail();
@@ -178,14 +178,13 @@ public class OryAuthServiceImpl implements OryAuthService {
     }
 
     private AuthProvider mapProvider(String provider) {
-        if(provider == null) return AuthProvider.LOCAL_OIDC;
-        String p = provider.toLowerCase(Locale.ROOT);
-        return switch (p) {
-            case "google" -> AuthProvider.GOOGLE;
-            case "github" -> AuthProvider.GITHUB;
-            case "facebook" -> AuthProvider.FACEBOOK;
-            default -> AuthProvider.LOCAL_OIDC;
-        };
+        if (provider == null) return AuthProvider.LOCAL_OIDC;
+        String p = provider.toLowerCase(Locale.ROOT).trim();
+        if (p.startsWith("google")) return AuthProvider.GOOGLE;
+        if (p.startsWith("facebook")) return AuthProvider.FACEBOOK;
+        if (p.startsWith("github")) return AuthProvider.GITHUB;
+        return AuthProvider.LOCAL_OIDC;
     }
+
 
 }
