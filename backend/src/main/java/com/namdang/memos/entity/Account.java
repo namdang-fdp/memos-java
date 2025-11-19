@@ -1,5 +1,6 @@
 package com.namdang.memos.entity;
 
+import com.namdang.memos.enumType.AuthProvider;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,15 +16,22 @@ import java.util.Set;
 @ToString
 @DynamicUpdate
 public class Account extends BaseEntity{
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, length = 255, unique = true)
     private String email;
 
     @ToString.Exclude
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
 
     @Column(length = 150)
     private String name;
+
+    @Column(name = "ory_identity_id", unique = true)
+    private String oryIdentityId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", length = 50)
+    private AuthProvider provider;
 
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
