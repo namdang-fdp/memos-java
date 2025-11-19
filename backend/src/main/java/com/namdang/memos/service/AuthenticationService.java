@@ -189,36 +189,49 @@ public class AuthenticationService {
     // the old token will be invalidated and store to db
     // create a new pair of token
     @Transactional
-    public TokenPair refreshFromCookie(String refreshToken) throws ParseException, JOSEException {
+    public LoginResult refreshFromCookie(String refreshToken) throws ParseException, JOSEException {
+
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED_EXCEPTION);
+            throw new AppException(ErrorCode.MISSING_REFRESH_TOKEN_COOKIE);
         }
 
-        // 1) verify refresh token
         SignedJWT signed = verifyToken(refreshToken, true);
         String email = signed.getJWTClaimsSet().getSubject();
 
         Account user = accountRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.INVALID_EMAIL));
 
-        // 2) rotate: revoke refresh old token
         String oldJti = signed.getJWTClaimsSet().getJWTID();
         Date oldExp   = signed.getJWTClaimsSet().getExpirationTime();
+
         invalidatedTokenRepository.save(
-                InvalidatedToken.builder().id(oldJti).expiryTime(oldExp).build()
+                InvalidatedToken.builder()
+                        .id(oldJti)
+                        .expiryTime(oldExp)
+                        .build()
         );
 
-        // 3) new pair token
-        String newAccess  = generateToken(user);           // TTL = VALID_DURATION
-        String newRefresh = generateRefreshToken(user);    // TTL = REFRESHABLE_DURATION
+        String newAccess  = generateToken(user);
+        String newRefresh = generateRefreshToken(user);
 
-        return TokenPair.builder()
+        TokenPair pair = TokenPair.builder()
                 .accessToken(newAccess)
                 .refreshToken(newRefresh)
                 .accessTtl(VALID_DURATION)
                 .refreshTtl(REFRESHABLE_DURATION)
                 .build();
+
+        String primaryRole = null;
+        if (user.getRoles() != null && !user.getRoles().isEmpty()) {
+            primaryRole = user.getRoles().iterator().next().getName();
+        }
+
+        return LoginResult.builder()
+                .tokenPair(pair)
+                .role(primaryRole)
+                .build();
     }
+
 
     // all of the below func is business, optional implement
     public IntrospectResponse introspect(IntrospectRequest introspectRequest) throws JOSEException, ParseException {
