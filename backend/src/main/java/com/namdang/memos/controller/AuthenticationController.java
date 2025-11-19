@@ -93,21 +93,28 @@ public class AuthenticationController {
 
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> refresh(
-            @CookieValue(name = "refresh_token", required = false) String refreshToken) throws Exception {
-
-        TokenPair pair = authenticationService.refreshFromCookie(refreshToken);
+            @CookieValue(name = "refresh_token", required = false) String refreshToken
+    ) throws Exception {
+        LoginResult result = authenticationService.refreshFromCookie(refreshToken);
+        TokenPair pair = result.getTokenPair();
 
         ResponseCookie newRefresh = ResponseCookie.from("refresh_token", pair.getRefreshToken())
-                .httpOnly(true).secure(true).sameSite("None")
-                .path("/auth").maxAge(pair.getRefreshTtl()).build();
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("None")
+                .path("/auth")
+                .maxAge(pair.getRefreshTtl())
+                .build();
 
-        var body = AuthenticationResponse.builder()
+        AuthenticationResponse body = AuthenticationResponse.builder()
                 .authenticated(true)
                 .token(pair.getAccessToken())
+                .role(result.getRole())
                 .build();
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, newRefresh.toString())
                 .body(ApiResponse.<AuthenticationResponse>builder().result(body).build());
     }
+
 }
