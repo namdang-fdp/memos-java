@@ -1,5 +1,6 @@
 package com.namdang.memos.dto.responses.auth;
 
+import com.namdang.memos.entity.Role;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -11,4 +12,5 @@ import lombok.experimental.FieldDefaults;
 public class AuthenticationResponse {
     boolean authenticated;
     String token;
+    String role;
 }

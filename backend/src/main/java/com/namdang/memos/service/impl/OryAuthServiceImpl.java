@@ -1,6 +1,8 @@
 package com.namdang.memos.service.impl;
 
 import com.namdang.memos.config.OryConfig;
+import com.namdang.memos.dto.responses.auth.RegisterResponse;
+import com.namdang.memos.dto.responses.auth.RegistrationResult;
 import com.namdang.memos.dto.responses.auth.TokenPair;
 import com.namdang.memos.dto.responses.ory.OryResponse;
 import com.namdang.memos.entity.Account;
@@ -24,6 +26,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,10 +44,12 @@ public class OryAuthServiceImpl implements OryAuthService {
 
     // function to read user session info base on ory cookies
     @Override
-    public ResponseEntity<OryResponse> callWhoAmI(String cookie) {
+    public ResponseEntity<OryResponse> callWhoAmI(String cookieName, String cookieValue) {
         String url = oryConfig.getPublicUrl() + "/sessions/whoami";
+        String cookie = cookieName + "=" + cookieValue;
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.COOKIE, cookie);
+        System.out.println(headers);
         HttpEntity<Void> request = new HttpEntity<>(headers);
         return restTemplate.exchange(url, HttpMethod.GET, request, OryResponse.class);
     }
@@ -52,11 +58,11 @@ public class OryAuthServiceImpl implements OryAuthService {
     // This is where the business logic occurs
     @Override
     @Transactional
-    public TokenPair loginFromOrySession(String cookie) {
-        if(cookie == null || cookie.isBlank()) {
+    public RegistrationResult loginFromOrySession(String cookieName, String cookieValue) {
+        if(cookieValue == null || cookieValue.isBlank() || cookieName == null || cookieName.isBlank()) {
             throw new AppException(ErrorCode.MISSING_ORY_COOKIES);
         }
-        ResponseEntity<OryResponse> response = callWhoAmI(cookie);
+        ResponseEntity<OryResponse> response = callWhoAmI(cookieName, cookieValue);
 
         OryResponse session = response.getBody();
         if (session == null || !session.isActive() || session.getIdentity() == null
@@ -133,8 +139,26 @@ public class OryAuthServiceImpl implements OryAuthService {
                 user = accountRepository.save(newUser);
             }
         }
-        TokenPair tokens = authenticationService.generateTokenPair(user);
-        return tokens;
+        TokenPair tokenPair = authenticationService.generateTokenPair(user);
+
+        user.getRoles().forEach(r -> r.getPermissions().size());
+
+        String roleName = user.getRoles().iterator().next().getName();
+
+        Set<String> permissionNames = user.getRoles().stream()
+                .flatMap(r -> r.getPermissions().stream())
+                .map(p -> p.getName())
+                .collect(Collectors.toSet());
+        RegisterResponse registerResponse = RegisterResponse.builder()
+                .accessToken(tokenPair.getAccessToken())
+                .role(roleName)
+                .permissions(permissionNames)
+                .provider(user.getProvider())
+                .build();
+        return RegistrationResult.builder()
+                .registerResponse(registerResponse)
+                .tokenPair(tokenPair)
+                .build();
     }
 
     // helpers to map provider of my app (my business logic)

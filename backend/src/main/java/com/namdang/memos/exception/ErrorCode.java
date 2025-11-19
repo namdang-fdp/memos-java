@@ -15,6 +15,9 @@ public enum ErrorCode {
     MISSING_ORY_COOKIES(1006, "Missing ory cookies", HttpStatus.BAD_REQUEST),
     INVALID_ORY_COOKIES(1007, "Invalid ory cookies", HttpStatus.BAD_REQUEST),
     ROLE_NOT_FOUND(1008, "Role not found", HttpStatus.BAD_REQUEST),
+    EMAIL_ALREADY_EXIST(1009, "Email already exist", HttpStatus.BAD_REQUEST),
+    MISSING_REFRESH_TOKEN_COOKIE(1010, "Missing refresh token in cookies", HttpStatus.BAD_REQUEST),
+    MISSING_AUTH_HEADER(1011, "Missing access token", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;

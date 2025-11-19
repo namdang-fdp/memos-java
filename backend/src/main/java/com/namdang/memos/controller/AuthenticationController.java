@@ -1,16 +1,15 @@
 package com.namdang.memos.controller;
 
-import com.namdang.memos.dto.requests.LogoutRequest;
 import com.namdang.memos.dto.requests.auth.AuthenticationRequest;
-import com.namdang.memos.dto.requests.auth.IntrospectRequest;
 import com.namdang.memos.dto.responses.ApiResponse;
 import com.namdang.memos.dto.responses.auth.*;
-import com.namdang.memos.service.AccountService;
 import com.namdang.memos.service.AuthenticationService;
-import com.nimbusds.jose.JOSEException;
+import com.namdang.memos.service.OryAuthService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,11 @@ import java.text.ParseException;
 @RequiredArgsConstructor
 public class AuthenticationController {
     AuthenticationService authenticationService;
-    AccountService accountService;
+    OryAuthService oryAuthService;
+
+    @NonFinal
+    @Value("${ory.session.cookie.name}")
+    private String cookieName;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthenticationResponse>> login(@RequestBody AuthenticationRequest request) {
@@ -134,6 +137,29 @@ public class AuthenticationController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, newRefresh.toString())
                 .body(ApiResponse.<AuthenticationResponse>builder().result(body).build());
+    }
+
+    @PostMapping("/oidc/ory")
+    public ResponseEntity<ApiResponse<RegisterResponse>> loginFromOry(
+            @CookieValue(name = "${ory.session.cookie.name}", required = false) String oryCookieValue
+    ) {
+        RegistrationResult result = oryAuthService.loginFromOrySession(cookieName,oryCookieValue);
+
+        TokenPair tokenPair = result.getTokenPair();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", tokenPair.getRefreshToken())
+                .secure(true)
+                .httpOnly(true)
+                .sameSite("None")
+                .path("/auth")
+                .maxAge(tokenPair.getRefreshTtl())
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(ApiResponse.<RegisterResponse>builder()
+                        .result(result.getRegisterResponse())
+                        .build());
     }
 
 }

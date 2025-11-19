@@ -1,4 +1,4 @@
-package com.namdang.memos.mapper;
+package com.namdang.memos.mapper.auth;
 
 import com.namdang.memos.dto.responses.auth.AuthenticationResponse;
 import com.namdang.memos.entity.Account;
