@@ -27,6 +27,22 @@ public class OryResponse {
     @JsonProperty("authenticator_assurance_level")
     private String authenticatorAssuranceLevel;
 
+    @JsonProperty("authentication_methods")
+    private List<AuthenticationMethod> authenticationMethods;
+
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class AuthenticationMethod {
+        private String method;
+        private String provider;
+
+        @JsonProperty("completed_at")
+        private OffsetDateTime completedAt;
+
+        @JsonProperty("aal")
+        private String aal;
+    }
+
     private Identity identity;
 
     @Data
