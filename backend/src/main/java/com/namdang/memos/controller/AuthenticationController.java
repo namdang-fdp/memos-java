@@ -6,9 +6,7 @@ import com.namdang.memos.dto.requests.account.AccountCreationRequest;
 import com.namdang.memos.dto.requests.auth.AuthenticationRequest;
 import com.namdang.memos.dto.requests.auth.IntrospectRequest;
 import com.namdang.memos.dto.responses.ApiResponse;
-import com.namdang.memos.dto.responses.auth.AuthenticationResponse;
-import com.namdang.memos.dto.responses.auth.IntrospectResponse;
-import com.namdang.memos.dto.responses.auth.TokenPair;
+import com.namdang.memos.dto.responses.auth.*;
 import com.namdang.memos.service.AccountService;
 import com.namdang.memos.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
@@ -55,6 +53,29 @@ public class AuthenticationController {
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(ApiResponse.<AuthenticationResponse>builder().result(body).build());
     }
+
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<RegisterResponse>> register(
+            @RequestBody AuthenticationRequest request) {
+
+        RegistrationResult result = authenticationService.register(request);
+
+        TokenPair tokenPair = result.getTokenPair();
+        RegisterResponse body = result.getRegisterResponse();
+
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", tokenPair.getRefreshToken())
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("None")
+                .path("/auth")
+                .maxAge(tokenPair.getRefreshTtl())
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(ApiResponse.<RegisterResponse>builder().result(body).build());
+    }
+
 
     @PostMapping("/introspect")
     ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request)
