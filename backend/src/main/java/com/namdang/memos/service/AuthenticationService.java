@@ -9,10 +9,13 @@ import com.namdang.memos.dto.responses.auth.IntrospectResponse;
 import com.namdang.memos.dto.responses.auth.TokenPair;
 import com.namdang.memos.entity.Account;
 import com.namdang.memos.entity.InvalidatedToken;
+import com.namdang.memos.entity.Role;
+import com.namdang.memos.enumType.AuthProvider;
 import com.namdang.memos.exception.AppException;
 import com.namdang.memos.exception.ErrorCode;
 import com.namdang.memos.repository.AccountRepository;
 import com.namdang.memos.repository.InvalidatedTokenRepository;
+import com.namdang.memos.repository.RoleRepository;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -35,17 +38,20 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService {
-    private PasswordEncoder passwordEncoder;
-    private AccountRepository accountRepository;
-    private InvalidatedTokenRepository invalidatedTokenRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AccountRepository accountRepository;
+    private final InvalidatedTokenRepository invalidatedTokenRepository;
+    private final RoleRepository roleRepository;
 
     @NonFinal
     @Value("${JWT_SIGNER_KEY_BASE64}")
@@ -124,6 +130,19 @@ public class AuthenticationService {
             log.error("Cannot create refresh token: Reason ", e);
             throw new RuntimeException(e);
         }
+    }
+
+    // generate a pair of access and refresh token
+    public TokenPair generateTokenPair(Account user) {
+        String accessToken = generateToken(user);
+        String refreshToken = generateRefreshToken(user);
+
+        return TokenPair.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .accessTtl(VALID_DURATION)
+                .refreshTtl(REFRESHABLE_DURATION)
+                .build();
     }
 
     // implement 3rd, this function used to verify token whether it invalid or not
@@ -206,7 +225,7 @@ public class AuthenticationService {
                 .build();
     }
 
-    // implement 6th --> check whether the token is valid or not
+    // all of the below func is business, optional implement
     public IntrospectResponse introspect(IntrospectRequest introspectRequest) throws JOSEException, ParseException {
         var token = introspectRequest.getToken();
         boolean valid = true;
@@ -218,7 +237,6 @@ public class AuthenticationService {
         return IntrospectResponse.builder().valid(valid).build();
     }
 
-    // implement 7th --> authenticate any request with account and password
     public TokenPair authenticate(AuthenticationRequest authenticationRequest) {
         Account user = accountRepository.findByEmail(authenticationRequest.getEmail()).orElseThrow(
                 () -> new AppException(ErrorCode.INVALID_EMAIL)
@@ -236,6 +254,26 @@ public class AuthenticationService {
                 .accessTtl(VALID_DURATION)
                 .refreshTtl(REFRESHABLE_DURATION)
                 .build();
+    }
+
+    @Transactional
+    public TokenPair register(AuthenticationRequest request) {
+        if(accountRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_ALREADY_EXIST);
+        }
+
+        Role memberRole = roleRepository.findByName("MEMBER");
+
+        Account newUser = new Account();
+        newUser.setEmail(request.getEmail());
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        newUser.setActive(true);
+        newUser.setProvider(AuthProvider.LOCAL);
+        newUser.setRoles(Set.of(memberRole));
+
+        accountRepository.save(newUser);
+
+        return generateTokenPair(newUser);
     }
 
 }
