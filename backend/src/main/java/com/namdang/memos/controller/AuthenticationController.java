@@ -75,13 +75,18 @@ public class AuthenticationController {
     }
 
 
-    @PostMapping("/introspect")
-    ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request)
-            throws ParseException, JOSEException {
-        return ApiResponse.<IntrospectResponse>builder()
-                .result(authenticationService.introspect(request))
-                .build();
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<MeResponse>> me(
+            @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authHeader
+    ) throws Exception {
+
+        MeResponse profile = authenticationService.me(authHeader);
+
+        return ResponseEntity.ok(
+                ApiResponse.<MeResponse>builder().result(profile).build()
+        );
     }
+
 
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(

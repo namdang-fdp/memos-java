@@ -1,6 +1,5 @@
 package com.namdang.memos.service;
 
-import com.namdang.memos.dto.requests.LogoutRequest;
 import com.namdang.memos.dto.requests.auth.AuthenticationRequest;
 import com.namdang.memos.dto.requests.auth.IntrospectRequest;
 import com.namdang.memos.dto.responses.auth.*;
@@ -10,7 +9,8 @@ import com.namdang.memos.entity.Role;
 import com.namdang.memos.enumType.AuthProvider;
 import com.namdang.memos.exception.AppException;
 import com.namdang.memos.exception.ErrorCode;
-import com.namdang.memos.mapper.RegisterMapper;
+import com.namdang.memos.mapper.account.ProfileMapper;
+import com.namdang.memos.mapper.auth.RegisterMapper;
 import com.namdang.memos.repository.AccountRepository;
 import com.namdang.memos.repository.InvalidatedTokenRepository;
 import com.namdang.memos.repository.RoleRepository;
@@ -47,6 +47,7 @@ public class AuthenticationService {
     private final InvalidatedTokenRepository invalidatedTokenRepository;
     private final RoleRepository roleRepository;
     private final RegisterMapper registerMapper;
+    private final ProfileMapper profileMapper;
 
     @NonFinal
     @Value("${JWT_SIGNER_KEY_BASE64}")
@@ -249,15 +250,24 @@ public class AuthenticationService {
 
 
     // all of the below func is business, optional implement
-    public IntrospectResponse introspect(IntrospectRequest introspectRequest) throws JOSEException, ParseException {
-        var token = introspectRequest.getToken();
-        boolean valid = true;
-        try {
-            verifyToken(token, false);
-        } catch (AppException e) {
-            valid = false;
+    @Transactional
+    public MeResponse me(String authHeader) throws ParseException, JOSEException {
+        if(authHeader == null || !authHeader.startsWith("Bearer")) {
+            throw new AppException(ErrorCode.MISSING_AUTH_HEADER);
         }
-        return IntrospectResponse.builder().valid(valid).build();
+
+        String token = authHeader.substring(7);
+        SignedJWT signed = verifyToken(token, false);
+        String email = signed.getJWTClaimsSet().getSubject();
+        Account user = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_EMAIL));
+
+        user.getRoles().forEach(role -> role.getPermissions().size());
+
+        String role = profileMapper.getPrimaryRole(user);
+        Set<String> permissions = profileMapper.getPermissionNames(user);
+
+        return profileMapper.toProfile(user, role, permissions);
     }
 
     // in AuthenticationService (injected: LoginMapper loginMapper)
