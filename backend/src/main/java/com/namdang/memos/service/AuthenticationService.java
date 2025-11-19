@@ -1,11 +1,11 @@
 package com.namdang.memos.service;
 
 import com.namdang.memos.dto.requests.LogoutRequest;
-import com.namdang.memos.dto.requests.RefreshRequest;
 import com.namdang.memos.dto.requests.auth.AuthenticationRequest;
 import com.namdang.memos.dto.requests.auth.IntrospectRequest;
-import com.namdang.memos.dto.responses.auth.AuthenticationResponse;
 import com.namdang.memos.dto.responses.auth.IntrospectResponse;
+import com.namdang.memos.dto.responses.auth.RegisterResponse;
+import com.namdang.memos.dto.responses.auth.RegistrationResult;
 import com.namdang.memos.dto.responses.auth.TokenPair;
 import com.namdang.memos.entity.Account;
 import com.namdang.memos.entity.InvalidatedToken;
@@ -13,6 +13,7 @@ import com.namdang.memos.entity.Role;
 import com.namdang.memos.enumType.AuthProvider;
 import com.namdang.memos.exception.AppException;
 import com.namdang.memos.exception.ErrorCode;
+import com.namdang.memos.mapper.RegisterMapper;
 import com.namdang.memos.repository.AccountRepository;
 import com.namdang.memos.repository.InvalidatedTokenRepository;
 import com.namdang.memos.repository.RoleRepository;
@@ -27,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-import org.antlr.v4.runtime.Token;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,10 +37,7 @@ import org.springframework.util.CollectionUtils;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.Set;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 
 
 @Service
@@ -52,6 +49,7 @@ public class AuthenticationService {
     private final AccountRepository accountRepository;
     private final InvalidatedTokenRepository invalidatedTokenRepository;
     private final RoleRepository roleRepository;
+    private final RegisterMapper registerMapper;
 
     @NonFinal
     @Value("${JWT_SIGNER_KEY_BASE64}")
@@ -257,7 +255,7 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public TokenPair register(AuthenticationRequest request) {
+    public RegistrationResult register(AuthenticationRequest request) {
         if(accountRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXIST);
         }
@@ -273,7 +271,15 @@ public class AuthenticationService {
 
         accountRepository.save(newUser);
 
-        return generateTokenPair(newUser);
+        TokenPair tokenPair = generateTokenPair(newUser);
+
+        RegisterResponse registerResponse =
+                registerMapper.toRegisterResponse(newUser, tokenPair.getAccessToken());
+
+        return RegistrationResult.builder()
+                .registerResponse(registerResponse)
+                .tokenPair(tokenPair)
+                .build();
     }
 
 }
