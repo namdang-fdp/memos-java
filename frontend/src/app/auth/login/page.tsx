@@ -13,11 +13,12 @@ import {
     isSecondFactorFlow,
     LoginFormValues,
     useFacebookLogin,
+    useGithubLogin,
+    useGoogleLogin,
     useLogin,
     useOryLoginFlow,
     useSecondFactorRedirect,
 } from '@/lib/service/auth';
-import { LoginFlow } from '@ory/client';
 import Image from 'next/image';
 import React, { forwardRef, InputHTMLAttributes, useState } from 'react';
 
@@ -157,6 +158,34 @@ export default function LoginPage() {
 
     const { canFacebookLogin, loginWithFacebook } = useFacebookLogin(flow);
 
+    const { canGithubLogin, loginWithGithub } = useGithubLogin(flow);
+
+    const { canGoogleLogin, loginWithGoogle } = useGoogleLogin(flow);
+    const handleSocialLogin = (name: string) => {
+        switch (name) {
+            case 'Facebook':
+                return loginWithFacebook();
+            case 'GitHub':
+                return loginWithGithub();
+            case 'Google':
+                return loginWithGoogle();
+            default:
+                break;
+        }
+    };
+
+    const isSocialDisable = (provider: string) => {
+        if (provider === 'Facebook') {
+            return isFlowLoading || !canFacebookLogin;
+        }
+        if (provider === 'GitHub') {
+            return isFlowLoading || !canGithubLogin;
+        }
+        if (provider === 'Google') {
+            return isFlowLoading || !canGoogleLogin;
+        }
+        return true;
+    };
     useSecondFactorRedirect(flow);
 
     if (isFlowLoading || !flow) {
@@ -199,8 +228,9 @@ export default function LoginPage() {
                     onMouseLeave={() => setIsHovering(false)}
                 >
                     <div
-                        className={`pointer-events-none absolute h-[500px] w-[500px] rounded-full bg-gradient-to-r from-purple-300/25 via-blue-300/25 to-pink-300/25 blur-3xl transition-opacity duration-200 ${isHovering ? 'opacity-100' : 'opacity-0'
-                            }`}
+                        className={`pointer-events-none absolute h-[500px] w-[500px] rounded-full bg-gradient-to-r from-purple-300/25 via-blue-300/25 to-pink-300/25 blur-3xl transition-opacity duration-200 ${
+                            isHovering ? 'opacity-100' : 'opacity-0'
+                        }`}
                         style={{
                             transform: `translate(${mousePosition.x - 250}px, ${mousePosition.y - 250}px)`,
                             transition: 'transform 0.1s ease-out',
@@ -228,20 +258,14 @@ export default function LoginPage() {
                                             <button
                                                 type="button"
                                                 className="group border-border relative flex h-10 w-10 items-center justify-center rounded-full border bg-[var(--color-bg-2)] shadow-sm transition-all duration-200 hover:-translate-y-[1px] hover:shadow-[0_0_25px_rgba(255,255,255,0.25)] md:h-11 md:w-11"
-                                                onClick={() => {
-                                                    if (
-                                                        social.name ===
-                                                        'Facebook'
-                                                    ) {
-                                                        loginWithFacebook();
-                                                    }
-                                                }}
-                                                disabled={
-                                                    social.name ===
-                                                    'Facebook' &&
-                                                    (isFlowLoading ||
-                                                        !canFacebookLogin)
+                                                onClick={() =>
+                                                    handleSocialLogin(
+                                                        social.name,
+                                                    )
                                                 }
+                                                disabled={isSocialDisable(
+                                                    social.name,
+                                                )}
                                             >
                                                 <span className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/10 via-transparent to-white/5 opacity-0 blur-sm transition-opacity duration-200 group-hover:opacity-100" />
                                                 <span className="relative z-[1] text-[var(--color-text-primary)]">

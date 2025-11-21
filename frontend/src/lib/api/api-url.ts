@@ -1,5 +1,3 @@
-'use server';
-
-export const getApiUrl = () => {
-    return process.env.API_URL || 'http://localhost:8080';
+export const getApiUrl = (): string => {
+    return process.env.API_URL ?? 'http://localhost:8080';
 };
