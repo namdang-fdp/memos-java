@@ -3,12 +3,13 @@ import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import {
     AttrByType,
-    FacebookData,
+    OidcData,
     LoginFormValues,
     LoginPayload,
     LoginResponse,
     loginSchema,
     NodeType,
+    RegisterResponse,
     SendCodeForm,
     sendCodeSchema,
     VerifyOtpForm,
@@ -20,6 +21,14 @@ import { LoginFlow, UiNode } from '@ory/client';
 import { useEffect, useMemo, useState } from 'react';
 import { oryFetcher } from '@/lib/api/ory';
 import { AxiosError } from 'axios';
+import {
+    axiosWrapper,
+    ApiResponse,
+    throwIfError,
+    deserialize,
+} from '@/lib/api/axios-config';
+import { toast } from 'sonner';
+import { useAuthStore } from '@/lib/stores/authStore';
 
 // ory flow hook logic
 // first user access to /auth/login. If the params already have ?flow="" (ory unique flow id)
@@ -76,11 +85,10 @@ export const useOrySecondFactorFlow = () => {
             .then(({ data }) => setFlow(data))
             .finally(() => setLoading(false));
     }, [flowId, setFlow, setLoading]);
-
     const email = useMemo(() => {
         if (!flow) return '';
 
-        const emailNode = findNode(flow, 'code', 'address', 'input');
+        const emailNode = findNode(flow, 'code', 'identifier', 'input');
         if (emailNode && typeof emailNode.value === 'string') {
             return emailNode.value;
         }
@@ -134,15 +142,36 @@ export function findNode<TType extends NodeType>(
     return null;
 }
 
+// find node with specific attribute (Facebook, github, google)
+export function findOidcProviderNode(
+    flow: LoginFlow,
+    providerKey: string,
+): AttrByType<'input'> | null {
+    const nodes = flow.ui.nodes as UiNode[];
+
+    for (const n of nodes) {
+        if (n.group !== 'oidc') continue;
+        if (!isInputNode(n)) continue;
+        if (n.attributes.name !== 'provider') continue;
+
+        const value = n.attributes.value;
+
+        if (typeof value === 'string' && value.startsWith(providerKey)) {
+            return n.attributes as AttrByType<'input'>;
+        }
+    }
+    return null;
+}
+
 // what will happen here. After redirect to facebook and user accept to loginWithFacebook
 // ory see that the user need the MFA. they will continue create one more login flow
 // that flow have the state = 'request-aal' and redirect to there own send MFA UI
 export const useFacebookLogin = (flow: LoginFlow | null) => {
     // get the facebook oidc node, action, method
-    const facebookData = useMemo<FacebookData | null>(() => {
+    const facebookData = useMemo<OidcData | null>(() => {
         if (!flow || !flow.ui?.action) return null;
 
-        const providerAttr = findNode(flow, 'oidc', 'provider', 'input');
+        const providerAttr = findOidcProviderNode(flow, 'facebook');
         const csrfAttr = findNode(flow, 'default', 'csrf_token', 'input');
 
         if (
@@ -197,6 +226,129 @@ export const useFacebookLogin = (flow: LoginFlow | null) => {
     return {
         canFacebookLogin: !!facebookData,
         loginWithFacebook,
+    };
+};
+
+// flow is the same with facebook login
+// the different is that we must find the oidc node with contain value 'github'
+export const useGithubLogin = (flow: LoginFlow | null) => {
+    const githubData = useMemo<OidcData | null>(() => {
+        if (!flow || !flow.ui?.action) return null;
+
+        const providerAttr = findOidcProviderNode(flow, 'github');
+        const csrfAttr = findNode(flow, 'default', 'csrf_token', 'input');
+
+        if (
+            !providerAttr ||
+            !csrfAttr ||
+            typeof providerAttr.value !== 'string' ||
+            typeof csrfAttr.value !== 'string'
+        ) {
+            console.warn(
+                'Missing GitHub OIDC provider or CSRF token node',
+                flow.ui?.nodes,
+            );
+            return null;
+        }
+
+        return {
+            action: flow.ui.action,
+            method: (flow.ui.method || 'POST').toUpperCase(),
+            providerValue: providerAttr.value,
+            csrfToken: csrfAttr.value,
+        };
+    }, [flow]);
+
+    const loginWithGithub = () => {
+        if (!githubData) {
+            console.warn('Github data not already yet');
+            return;
+        }
+        const { action, method, providerValue, csrfToken } = githubData;
+        const form = document.createElement('form');
+        form.method = method;
+        form.action = action;
+
+        const crsfInput = document.createElement('input');
+        crsfInput.type = 'hidden';
+        crsfInput.name = 'csrf_token';
+        crsfInput.value = csrfToken;
+        form.appendChild(crsfInput);
+
+        const providerInput = document.createElement('input');
+        providerInput.type = 'hidden';
+        providerInput.name = 'provider';
+        providerInput.value = providerValue;
+        form.appendChild(providerInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    };
+    return {
+        canGithubLogin: !!githubData,
+        loginWithGithub,
+    };
+};
+
+export const useGoogleLogin = (flow: LoginFlow | null) => {
+    const googleData = useMemo<OidcData | null>(() => {
+        if (!flow || !flow.ui?.action) return null;
+
+        const providerAttr = findOidcProviderNode(flow, 'google');
+        const csrfAttr = findNode(flow, 'default', 'csrf_token', 'input');
+
+        if (
+            !providerAttr ||
+            !csrfAttr ||
+            typeof providerAttr.value !== 'string' ||
+            typeof csrfAttr.value !== 'string'
+        ) {
+            console.warn(
+                'Missing Google OIDC provider or CSRF token node',
+                flow.ui?.nodes,
+            );
+            return null;
+        }
+
+        return {
+            action: flow.ui.action,
+            method: (flow.ui.method || 'POST').toUpperCase(),
+            providerValue: providerAttr.value,
+            csrfToken: csrfAttr.value,
+        };
+    }, [flow]);
+
+    const loginWithGoogle = () => {
+        if (!googleData) {
+            console.warn('Google login data not ready yet');
+            return;
+        }
+
+        const { action, method, providerValue, csrfToken } = googleData;
+
+        const form = document.createElement('form');
+        form.method = method;
+        form.action = action;
+
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        const providerInput = document.createElement('input');
+        providerInput.type = 'hidden';
+        providerInput.name = 'provider';
+        providerInput.value = providerValue;
+        form.appendChild(providerInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    };
+
+    return {
+        canGoogleLogin: !!googleData,
+        loginWithGoogle,
     };
 };
 
@@ -347,20 +499,28 @@ export const useVerifyOtpCode = (flow: LoginFlow) => {
 
 // login with username and password
 export const useLogin = () => {
+    const router = useRouter();
+    const setToken = useAuthStore((s) => s.setToken);
     const mutation = useMutation({
         mutationFn: async (values: LoginPayload) => {
-            await new Promise((r) => setTimeout(r, 1000));
+            const response = await axiosWrapper.post<
+                ApiResponse<LoginResponse>
+            >('/auth/login', values);
+
+            throwIfError(response.data, response.status);
+
             return {
-                token: 'fake-token-123',
-                user: {
-                    id: '1',
-                    email: values.email,
-                    name: 'Ken Demo',
-                },
-            } as LoginResponse;
+                message: response.data.message,
+                result: deserialize<LoginResponse>(response.data),
+            };
         },
-        onSuccess: (data) => {
-            console.log('Logged in: ', data);
+        onSuccess: ({ result }) => {
+            setToken(result.token);
+            toast.success('Login Successfully');
+            router.push('/');
+        },
+        onError: (err) => {
+            toast.error(err.message);
         },
     });
     const form = useForm<LoginFormValues>({
@@ -375,4 +535,103 @@ export const useLogin = () => {
         form,
         mutation,
     };
+};
+
+export const useOidcRegister = () => {
+    const setToken = useAuthStore((s) => s.setToken);
+    const mutation = useMutation({
+        mutationFn: async () => {
+            const response =
+                await axiosWrapper.post<ApiResponse<RegisterResponse>>(
+                    '/auth/oidc/ory',
+                );
+
+            throwIfError(response.data, response.status);
+
+            return {
+                message: response.data.message,
+                result: deserialize<RegisterResponse>(response.data),
+            };
+        },
+        onSuccess: ({ result }) => {
+            setToken(result.accessToken);
+            toast.success('Login Successfully');
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
+    return mutation;
+};
+
+// refresh to get new access token
+export const useRefreshToken = () => {
+    const setToken = useAuthStore((s) => s.setToken);
+    return useMutation({
+        mutationFn: async () => {
+            const response =
+                await axiosWrapper.post<ApiResponse<LoginResponse>>(
+                    '/auth/refresh',
+                );
+            throwIfError(response.data, response.status);
+            return {
+                message: response.data.message,
+                result: deserialize<LoginResponse>(response.data),
+            };
+        },
+        onSuccess: ({ result }) => {
+            setToken(result.token);
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
+};
+
+// auto refresh within 10 mins
+export const useAutoRefresh = () => {
+    const { accessToken, expiresAt } = useAuthStore();
+    const refresh = useRefreshToken();
+
+    useEffect(() => {
+        if (!accessToken || !expiresAt) return;
+
+        const now = Date.now();
+        const timeLeft = expiresAt - now;
+
+        const refreshBefore = 10 * 60 * 1000;
+
+        const triggerIn = Math.max(timeLeft - refreshBefore, 5000);
+
+        const timer = setTimeout(() => {
+            refresh.mutate();
+        }, triggerIn);
+
+        return () => clearTimeout(timer);
+    }, [accessToken, expiresAt, refresh]);
+};
+
+// logout
+export const useLogout = () => {
+    const router = useRouter();
+    const clear = useAuthStore((s) => s.clear);
+
+    return useMutation({
+        mutationFn: async () => {
+            const response =
+                await axiosWrapper.post<ApiResponse<void>>('/auth/logout');
+            throwIfError(response.data, response.status);
+            return {
+                message: response.data.message,
+            };
+        },
+        onSuccess: () => {
+            clear();
+            router.push('/login');
+            toast.success('Logout Successfully');
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
 };

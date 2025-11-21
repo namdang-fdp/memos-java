@@ -1,15 +1,26 @@
 import z from 'zod';
 
 import type { UiNode } from '@ory/client';
+import { permission } from 'process';
 
 export type NodeType = UiNode['attributes']['node_type'];
+
+export const oidcProvider = [
+    'LOCAL',
+    'LOCAL_OIDC',
+    'GOOGLE',
+    'FACEBOOK',
+    'GITHUB',
+] as const;
+
+export type OidcProvider = (typeof oidcProvider)[number];
 
 export type AttrByType<TType extends NodeType> = Extract<
     UiNode['attributes'],
     { node_type: TType }
 >;
 
-export type FacebookData = {
+export type OidcData = {
     action: string;
     method: string;
     providerValue: string;
@@ -22,13 +33,17 @@ export type LoginPayload = {
 };
 
 export type LoginResponse = {
+    authenticated: boolean;
     token: string;
-    user: {
-        id: string;
-        email: string;
-        name: string;
-    };
+    role: string;
 };
+
+export interface RegisterResponse {
+    accessToken: string;
+    role: string;
+    permission: string[];
+    provider: OidcProvider;
+}
 
 // -------------------- Schema ------------------------
 export const loginSchema = z.object({
