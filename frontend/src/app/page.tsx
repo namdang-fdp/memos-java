@@ -1,3 +1,4 @@
+'use client';
 import { Counter } from '@/components/counter';
 import { Header } from '@/components/header';
 

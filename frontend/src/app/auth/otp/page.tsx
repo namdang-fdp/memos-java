@@ -18,11 +18,9 @@ export default function Home() {
     const router = useRouter();
     const { flow, email, loading } = useOrySecondFactorFlow();
     const [step, setStep] = useState<Step>('send');
-
     const { sendCode } = useSendOtpCode(flow as LoginFlow, email);
 
     const { verifyCode } = useVerifyOtpCode(flow as LoginFlow);
-
     if (loading || !flow) {
         return (
             <div className="flex min-h-screen items-center justify-center">
@@ -33,7 +31,7 @@ export default function Home() {
 
     const handleVerifyOtp = async (code: string) => {
         await verifyCode(code);
-        router.replace('/');
+        router.replace('/auth/oidc/callback');
     };
 
     const handleResendCode = async () => {
