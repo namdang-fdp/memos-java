@@ -1,4 +1,4 @@
-package com.namdang.memos.dto.requests;
+package com.namdang.memos.dto.requests.auth;
 
 import lombok.Getter;
 import lombok.Setter;
