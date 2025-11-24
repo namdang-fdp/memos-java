@@ -18,6 +18,7 @@ public enum ErrorCode {
     EMAIL_ALREADY_EXIST(1009, "Email already exist", HttpStatus.BAD_REQUEST),
     MISSING_REFRESH_TOKEN_COOKIE(1010, "Missing refresh token in cookies", HttpStatus.BAD_REQUEST),
     MISSING_AUTH_HEADER(1011, "Missing access token", HttpStatus.BAD_REQUEST),
+    INVALID_PROJECT_NAME(1012, "Invalid project name", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;

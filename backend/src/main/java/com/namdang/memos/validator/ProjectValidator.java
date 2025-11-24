@@ -2,7 +2,9 @@ package com.namdang.memos.validator;
 
 import com.namdang.memos.exception.AppException;
 import com.namdang.memos.exception.ErrorCode;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ProjectValidator {
     public void validatorProjectName(String projectName) {
         if(projectName == null) {
