@@ -128,6 +128,9 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new AppException(ErrorCode.PROJECT_NOT_FOUND));
 
+        if(project.isArchived()) {
+            throw new AppException(ErrorCode.PROJECT_NOT_FOUND);
+        }
         project.setName(request.getName());
         project.setImageUrl(request.getImageUrl());
         project.setDescription(request.getDescription());
