@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @MappedSuperclass
 @Getter
 @Setter
+@ToString
 public class BaseEntity {
     @Id
     @GeneratedValue
@@ -21,5 +23,5 @@ public class BaseEntity {
 
     @Column(name = "created_at", updatable = false, nullable = false)
     @CreationTimestamp
-    private LocalDate created_at;
+    private LocalDate createdAt;
 }
