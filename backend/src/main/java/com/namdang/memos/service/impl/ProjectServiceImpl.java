@@ -146,7 +146,9 @@ public class ProjectServiceImpl implements ProjectService {
     public CreateProjectResponse getProject(UUID projectId) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new AppException(ErrorCode.PROJECT_NOT_FOUND));
-        System.out.println(project);
+        if(project.isArchived()) {
+            throw new AppException(ErrorCode.PROJECT_NOT_FOUND);
+        }
         return projectMapper.mapToCreateProjectResponse(project);
     }
 
