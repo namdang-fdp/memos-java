@@ -13,6 +13,7 @@ import com.namdang.memos.mapper.project.ProjectMapper;
 import com.namdang.memos.repository.AccountRepository;
 import com.namdang.memos.repository.ProjectMemberRepository;
 import com.namdang.memos.repository.ProjectRepository;
+import com.namdang.memos.security.UserPermission;
 import com.namdang.memos.service.ProjectService;
 import com.namdang.memos.validator.ProjectValidator;
 import lombok.AccessLevel;
@@ -21,7 +22,10 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +37,7 @@ public class ProjectServiceImpl implements ProjectService {
     AccountRepository accountRepository;
     ProjectMapper projectMapper;
     ProjectValidator projectValidator;
+    UserPermission userPermission;
 
     // Rule:
     // If name has one word --> get 2 chars + (countProject + 1)
@@ -76,7 +81,7 @@ public class ProjectServiceImpl implements ProjectService {
         return prefix + "-" + nextNumber;
     }
 
-
+    // create project
     @Override
     @Transactional
     public CreateProjectResponse createProject(CreateProjectRequest request, String creatorEmail) {
@@ -88,6 +93,7 @@ public class ProjectServiceImpl implements ProjectService {
         String projectKey = generateProjectKey(request.getName());
         project.setProjectKey(projectKey);
         project.setCreatedBy(projectCreator);
+        System.out.println(project);
         project = projectRepository.save(project);
 
         ProjectMember owner = new ProjectMember();
@@ -102,4 +108,76 @@ public class ProjectServiceImpl implements ProjectService {
 
         return projectMapper.mapToCreateProjectResponse(project);
     }
+
+    // soft delete project
+    @Override
+    @Transactional
+    public void deleteProject(UUID projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new AppException(ErrorCode.PROJECT_NOT_FOUND));
+        if(project.isArchived()) {
+            throw new AppException(ErrorCode.PROJECT_ALREADY_ARCHIVED);
+        }
+
+        project.setArchived(true);
+        projectRepository.save(project);
+    }
+
+    // update project
+    @Override
+    @Transactional
+    public CreateProjectResponse updateProject(CreateProjectRequest request, UUID projectId) {
+        projectValidator.validatorProjectName(request.getName());
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new AppException(ErrorCode.PROJECT_NOT_FOUND));
+
+        project.setName(request.getName());
+        project.setImageUrl(request.getImageUrl());
+        project.setDescription(request.getDescription());
+
+        project = projectRepository.save(project);
+
+        return projectMapper.mapToCreateProjectResponse(project);
+    }
+
+    // get one project
+    @Override
+    @Transactional
+    public CreateProjectResponse getProject(UUID projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new AppException(ErrorCode.PROJECT_NOT_FOUND));
+        System.out.println(project);
+        return projectMapper.mapToCreateProjectResponse(project);
+    }
+
+    // get all projects
+    @Override
+    @Transactional
+    public List<CreateProjectResponse> getProjects(String email) {
+        if(userPermission.isAdminByEmail(email)) {
+            return getProjectsForAdmin();
+        } else {
+            return getProjectForMember(email);
+        }
+    }
+
+    private List<CreateProjectResponse> getProjectsForAdmin() {
+        return projectRepository.findByArchivedFalse()
+                .stream()
+                .map(projectMapper::mapToCreateProjectResponse)
+                .toList();
+    }
+
+    private List<CreateProjectResponse> getProjectForMember(String email) {
+        Account account = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_EMAIL));
+        return projectMemberRepository.findByAccountId(account.getId())
+                .stream()
+                .map(ProjectMember::getProject)
+                .filter(project -> !project.isArchived())
+                .map(projectMapper::mapToCreateProjectResponse)
+                .toList();
+    }
+
+
 }
