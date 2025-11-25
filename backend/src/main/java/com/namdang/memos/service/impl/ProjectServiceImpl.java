@@ -21,11 +21,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
@@ -93,7 +93,6 @@ public class ProjectServiceImpl implements ProjectService {
         String projectKey = generateProjectKey(request.getName());
         project.setProjectKey(projectKey);
         project.setCreatedBy(projectCreator);
-        System.out.println(project);
         project = projectRepository.save(project);
 
         ProjectMember owner = new ProjectMember();
@@ -180,6 +179,5 @@ public class ProjectServiceImpl implements ProjectService {
                 .map(projectMapper::mapToCreateProjectResponse)
                 .toList();
     }
-
 
 }

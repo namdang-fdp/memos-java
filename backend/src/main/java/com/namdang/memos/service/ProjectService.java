@@ -2,7 +2,6 @@ package com.namdang.memos.service;
 
 import com.namdang.memos.dto.requests.project.CreateProjectRequest;
 import com.namdang.memos.dto.responses.project.CreateProjectResponse;
-
 import java.util.List;
 import java.util.UUID;
 
