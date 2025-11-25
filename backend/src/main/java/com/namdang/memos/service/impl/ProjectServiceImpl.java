@@ -84,7 +84,7 @@ public class ProjectServiceImpl implements ProjectService {
     // create project
     @Override
     @Transactional
-    public CreateProjectResponse createProject(CreateProjectRequest request, String creatorEmail) {
+    public void createProject(CreateProjectRequest request, String creatorEmail) {
         projectValidator.validatorProjectName(request.getName());
         Account projectCreator = accountRepository.findByEmail(creatorEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.INVALID_EMAIL));
@@ -104,8 +104,6 @@ public class ProjectServiceImpl implements ProjectService {
         owner.setInvitedStatus(InviteStatus.ACCEPTED);
 
         projectMemberRepository.save(owner);
-
-        return projectMapper.mapToCreateProjectResponse(project);
     }
 
     // soft delete project

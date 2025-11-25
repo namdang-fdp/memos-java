@@ -27,14 +27,14 @@ public class ProjectController {
 
     @PostMapping("/project")
     @PreAuthorize("hasAuthority('PROJECT.CREATE') or hasAuthority('ADMIN.FULL_ACCESS')")
-    public ApiResponse<CreateProjectResponse> createProject(
+    public ApiResponse<String> createProject(
             @RequestBody CreateProjectRequest request,
             @AuthenticationPrincipal Jwt jwt
     ) {
         String email = jwt.getSubject();
-        CreateProjectResponse response = projectService.createProject(request, email);
-        return ApiResponse.<CreateProjectResponse>builder()
-                .result(response)
+        projectService.createProject(request, email);
+        return ApiResponse.<String>builder()
+                .result("Create Project Successfully")
                 .build();
     }
 

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ProjectService {
-    CreateProjectResponse createProject(CreateProjectRequest request, String creatorEmail);
+    void createProject(CreateProjectRequest request, String creatorEmail);
 
     void deleteProject(UUID projectId);
 
