@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-@Component("projectPermisson")
+@Component("projectPermission")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ProjectPermission {
@@ -51,8 +51,8 @@ public class ProjectPermission {
                 .map(role -> role == ProjectRole.OWNER)
                 .orElse(false);
     }
-    // every one can update project
-    public boolean canUpdateProject(UUID projectId, Authentication authentication) {
+    // admin + owner + member (of project) can update project and view project
+    public boolean canViewAndUpdateProject(UUID projectId, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
         }
