@@ -54,6 +54,7 @@ public class SecurityConfig {
                     new ObjectMapper().writeValue(response.getOutputStream(), body);
                 })
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    System.out.println("Here");
                     response.setStatus(HttpStatus.FORBIDDEN.value());
                     response.setContentType("application/json");
                     ApiResponse<?> body = ApiResponse.builder()
