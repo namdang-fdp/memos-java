@@ -19,6 +19,9 @@ public enum ErrorCode {
     MISSING_REFRESH_TOKEN_COOKIE(1010, "Missing refresh token in cookies", HttpStatus.BAD_REQUEST),
     MISSING_AUTH_HEADER(1011, "Missing access token", HttpStatus.BAD_REQUEST),
     INVALID_PROJECT_NAME(1012, "Invalid project name", HttpStatus.BAD_REQUEST),
+    PROJECT_NOT_FOUND(1013, "Project not found", HttpStatus.BAD_REQUEST),
+    FORBIDDEN_ACTION(1014, "You cannot do this action",  HttpStatus.FORBIDDEN),
+    PROJECT_ALREADY_ARCHIVED(1015, "Project is already archived", HttpStatus.BAD_REQUEST)
     ;
 
     private final int code;
