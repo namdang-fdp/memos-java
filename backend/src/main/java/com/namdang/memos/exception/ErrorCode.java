@@ -11,7 +11,7 @@ public enum ErrorCode {
     INVALID_EMAIL(1002, "Invalid email", HttpStatus.BAD_REQUEST),
     INVALID_PASSWORD(1003, "Invalid password", HttpStatus.BAD_REQUEST),
     DUPLICATE_EMAIL(1004, "This email already exist", HttpStatus.BAD_REQUEST),
-    INVALID_ACCOUNT(1005, "Cannot find this email", HttpStatus.BAD_REQUEST),
+    INVALID_ACCOUNT(1005, "Please login before access this feature", HttpStatus.BAD_REQUEST),
     MISSING_ORY_COOKIES(1006, "Missing ory cookies", HttpStatus.BAD_REQUEST),
     INVALID_ORY_COOKIES(1007, "Invalid ory cookies", HttpStatus.BAD_REQUEST),
     ROLE_NOT_FOUND(1008, "Role not found", HttpStatus.BAD_REQUEST),
