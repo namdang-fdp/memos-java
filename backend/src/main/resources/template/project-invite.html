@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Memos Project Invitation</title>
+</head>
+<body style="margin:0; padding:24px; background-color:#0f172a; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="600"
+       style="max-width:600px; width:100%; background-color:#020617; border-radius:12px; overflow:hidden; box-shadow:0 18px 45px rgba(15,23,42,0.55);">
+    <tr>
+        <td style="padding:16px 24px; background:linear-gradient(135deg,#1d4ed8,#22c55e); color:#f9fafb;">
+            <table width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td style="font-size:16px; font-weight:600;">
+                        Memos · Project Invitation
+                    </td>
+                    <td align="right" style="font-size:12px; opacity:0.85;">
+                        Notification from Memos
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:24px 24px 8px 24px;">
+            <p style="margin:0 0 8px 0; font-size:14px; color:#9ca3af;">
+                Hi there,
+            </p>
+
+            <p style="margin:0 0 12px 0; font-size:14px; color:#e5e7eb; line-height:1.6;">
+                <strong>{{INVITER_NAME}}</strong> has invited you to collaborate on the project
+                <strong>“{{PROJECT_NAME}}”</strong> in <strong>Memos</strong>.
+            </p>
+
+            <p style="margin:0 0 20px 0; font-size:13px; color:#9ca3af; line-height:1.6;">
+                Use the button below to open the project, review the details, and start working with your team.
+            </p>
+
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto 20px auto;">
+                <tr>
+                    <td align="center" bgcolor="#2563eb"
+                        style="border-radius:999px; padding:10px 26px;">
+                        <a href="{{INVITE_LINK}}"
+                           style="font-size:13px; font-weight:600; color:#f9fafb; text-decoration:none; display:inline-block;">
+                            Open project in Memos
+                        </a>
+                    </td>
+                </tr>
+            </table>
+
+            <p style="margin:0 0 12px 0; font-size:12px; color:#9ca3af; line-height:1.6;">
+                If the button doesn’t work, copy and paste the following link into your browser:
+            </p>
+
+            <p style="margin:0 0 20px 0; font-size:11px; color:#e5e7eb; word-break:break-all;">
+                {{INVITE_LINK}}
+            </p>
+
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"
+                   style="margin-top:8px; padding-top:12px; border-top:1px solid #1f2937;">
+                <tr>
+                    <td style="font-size:11px; color:#6b7280; line-height:1.6;">
+                        You’re receiving this email because someone invited you to a project in Memos.
+                        If you weren’t expecting this invitation, you can safely ignore this email.
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:12px 24px 18px 24px; font-size:11px; color:#4b5563; text-align:center;">
+            © {{CURRENT_YEAR}} Memos. All rights reserved.
+        </td>
+    </tr>
+</table>
+</body>
+</html>
