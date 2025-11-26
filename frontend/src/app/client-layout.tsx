@@ -1,6 +1,6 @@
 'use client';
 
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
 import { useAutoRefresh } from '@/lib/service/auth';
 
 export default function ClientLayout({
@@ -12,7 +12,7 @@ export default function ClientLayout({
     return (
         <>
             {children}
-            <Toaster richColors />
+            <Toaster />
         </>
     );
 }
