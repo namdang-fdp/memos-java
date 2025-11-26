@@ -1,7 +1,6 @@
 import z from 'zod';
 
 import type { UiNode } from '@ory/client';
-import { permission } from 'process';
 
 export type NodeType = UiNode['attributes']['node_type'];
 
