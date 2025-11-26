@@ -45,4 +45,10 @@ public class ProjectMember extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "invited_status", length = 20)
     private InviteStatus invitedStatus = InviteStatus.PENDING;
+
+    @Column(name = "invite_token", length = 200, unique = true)
+    private String inviteToken;
+
+    @Column(name = "invite_expired_at")
+    private LocalDateTime inviteExpiredAt;
 }
