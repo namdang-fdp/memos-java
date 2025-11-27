@@ -16,4 +16,6 @@ public interface ProjectMemberRepository extends JpaRepository<ProjectMember, UU
     boolean existsByProject_IdAndAccount_Id(UUID projectId, UUID accountId);
 
     boolean existsByProject_IdAndInvitedEmailAndInvitedStatus(UUID projectId, String invitedEmail, InviteStatus invitedStatus);
+
+    Optional<ProjectMember> findByInviteToken(String inviteToken);
 }

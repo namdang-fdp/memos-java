@@ -24,6 +24,8 @@ public enum ErrorCode {
     PROJECT_ALREADY_ARCHIVED(1015, "Project is already archived", HttpStatus.BAD_REQUEST),
     MEMBER_ALREADY_EXISTED(1016, "Member is already exist", HttpStatus.BAD_REQUEST),
     INVITE_ALREADY_SENT(1017, "Invite already sent", HttpStatus.BAD_REQUEST),
+    INVITE_NOT_FOUND(1018, "Invite not found", HttpStatus.BAD_REQUEST),
+    INVITATION_IS_EXPIRED(1019, "Invite is expired", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;

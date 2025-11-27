@@ -1,6 +1,7 @@
 package com.namdang.memos.service.impl;
 
 import com.namdang.memos.dto.requests.invite.ProjectInviteRequest;
+import com.namdang.memos.dto.responses.invite.InviteInfoResponse;
 import com.namdang.memos.dto.responses.project.ProjectMemberResponse;
 import com.namdang.memos.entity.Account;
 import com.namdang.memos.entity.Project;
@@ -9,6 +10,7 @@ import com.namdang.memos.enumType.InviteStatus;
 import com.namdang.memos.enumType.ProjectRole;
 import com.namdang.memos.exception.AppException;
 import com.namdang.memos.exception.ErrorCode;
+import com.namdang.memos.mapper.project.InviteMapper;
 import com.namdang.memos.mapper.project.ProjectMemberMapper;
 import com.namdang.memos.repository.AccountRepository;
 import com.namdang.memos.repository.ProjectMemberRepository;
@@ -32,6 +34,7 @@ public class InviteServiceImpl implements InviteService {
     AccountRepository accountRepository;
     ProjectMemberRepository projectMemberRepository;
     ProjectMemberMapper projectMemberMapper;
+    InviteMapper inviteMapper;
     MailService mailService;
 
     static int INVITE_EXPIRE_DAYS = 7;
@@ -78,5 +81,18 @@ public class InviteServiceImpl implements InviteService {
                 member.getInviteToken()
         );
         return projectMemberMapper.mapToProjectMemberResponse(member);
+    }
+
+    @Override
+    @Transactional
+    public InviteInfoResponse getInviteInfo(String token) {
+        ProjectMember projectMember = projectMemberRepository.findByInviteToken(token)
+                .orElseThrow(() -> new AppException(ErrorCode.INVITE_NOT_FOUND));
+
+        if(projectMember.getInviteExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new AppException(ErrorCode.INVITATION_IS_EXPIRED);
+        }
+
+        return inviteMapper.mapToInviteInfoResponse(projectMember);
     }
 }

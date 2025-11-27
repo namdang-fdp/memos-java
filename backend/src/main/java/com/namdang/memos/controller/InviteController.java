@@ -2,9 +2,9 @@ package com.namdang.memos.controller;
 
 import com.namdang.memos.dto.requests.invite.ProjectInviteRequest;
 import com.namdang.memos.dto.responses.ApiResponse;
+import com.namdang.memos.dto.responses.invite.InviteInfoResponse;
 import com.namdang.memos.dto.responses.project.ProjectMemberResponse;
 import com.namdang.memos.repository.AccountRepository;
-import com.namdang.memos.service.InviteDebugService;
 import com.namdang.memos.service.InviteService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +36,16 @@ public class InviteController {
         ProjectMemberResponse response = inviteService.createInvite(request, email, id);
 
         return ApiResponse.<ProjectMemberResponse>builder()
+                .result(response)
+                .build();
+    }
+
+    @GetMapping("/invite/info/{id}")
+    public ApiResponse<InviteInfoResponse> getInviteInfo(
+            @PathVariable String id
+    ) {
+        InviteInfoResponse response = inviteService.getInviteInfo(id);
+        return ApiResponse.<InviteInfoResponse>builder()
                 .result(response)
                 .build();
     }
