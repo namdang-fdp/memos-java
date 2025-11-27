@@ -36,7 +36,7 @@ import { useAuthStore } from '@/lib/stores/authStore';
 // first user access to /auth/login. If the params already have ?flow="" (ory unique flow id)
 // --> call getLoginFlow to get flow data and OIDC
 // if not yet: call --> createBrowserLoginFlow to create new flow --> router replace
-export const useOryLoginFlow = () => {
+export const useOryLoginFlow = (page: string) => {
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -58,7 +58,7 @@ export const useOryLoginFlow = () => {
                 oryFetcher
                     .createBrowserLoginFlow()
                     .then(({ data }) => {
-                        router.replace(`/auth/login?flow=${data.id}`);
+                        router.replace(`/auth/${page}?flow=${data.id}`);
                     })
                     .catch(console.error);
             } catch (error) {
@@ -67,7 +67,7 @@ export const useOryLoginFlow = () => {
             }
         };
         init();
-    }, [router, searchParams]);
+    }, [router, searchParams, page]);
     return { flow, isLoading };
 };
 

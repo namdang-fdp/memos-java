@@ -13,7 +13,18 @@ import React, { useState } from 'react';
 import { AppInput } from '@/components/app-input';
 import { socialIcons } from '../../../../constant/constant-data';
 import { useRouter } from 'next/navigation';
-import { RegisterFormValues, useRegister } from '@/lib/service/auth';
+import {
+    isSecondFactorFlow,
+    RegisterFormValues,
+    useFacebookLogin,
+    useGithubLogin,
+    useGoogleLogin,
+    useOryLoginFlow,
+    useRegister,
+    useSecondFactorRedirect,
+} from '@/lib/service/auth';
+import { Eye, EyeOff } from 'lucide-react';
+import { LoadingSpinner } from '@/components/loading-spinner';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -22,9 +33,62 @@ export default function RegisterPage() {
         y: number;
     }>({ x: 0, y: 0 });
     const [isHovering, setIsHovering] = useState(false);
-    const { form: registerForm, mutation: registerMutation } = useRegister();
 
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const { form: registerForm, mutation: registerMutation } = useRegister();
     const { isSubmitting, isValid } = registerForm.formState;
+
+    const { flow, isLoading: isFlowLoading } = useOryLoginFlow('register');
+
+    const { canFacebookLogin, loginWithFacebook } = useFacebookLogin(flow);
+    const { canGithubLogin, loginWithGithub } = useGithubLogin(flow);
+    const { canGoogleLogin, loginWithGoogle } = useGoogleLogin(flow);
+
+    const handleSocialLogin = (name: string) => {
+        switch (name) {
+            case 'Facebook':
+                return loginWithFacebook();
+            case 'GitHub':
+                return loginWithGithub();
+            case 'Google':
+                return loginWithGoogle();
+            default:
+                break;
+        }
+    };
+
+    const isSocialDisable = (provider: string) => {
+        if (provider === 'Facebook') {
+            return isFlowLoading || !canFacebookLogin;
+        }
+        if (provider === 'GitHub') {
+            return isFlowLoading || !canGithubLogin;
+        }
+        if (provider === 'Google') {
+            return isFlowLoading || !canGoogleLogin;
+        }
+        return true;
+    };
+
+    useSecondFactorRedirect(flow);
+
+    if (isFlowLoading || !flow) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <LoadingSpinner size="lg" showText={false} />
+            </div>
+        );
+    }
+
+    if (isSecondFactorFlow(flow)) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <LoadingSpinner size="lg" showText={false} />
+            </div>
+        );
+    }
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         const rect = e.currentTarget.getBoundingClientRect();
@@ -78,6 +142,14 @@ export default function RegisterPage() {
                                             <button
                                                 type="button"
                                                 className="group border-border relative flex h-10 w-10 items-center justify-center rounded-full border bg-(--color-bg-2) shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-[0_0_25px_rgba(255,255,255,0.25)] md:h-11 md:w-11"
+                                                onClick={() =>
+                                                    handleSocialLogin(
+                                                        social.name,
+                                                    )
+                                                }
+                                                disabled={isSocialDisable(
+                                                    social.name,
+                                                )}
                                             >
                                                 <span className="absolute inset-0 rounded-full bg-linear-to-tr from-white/10 via-transparent to-white/5 opacity-0 blur-sm transition-opacity duration-200 group-hover:opacity-100" />
                                                 <span className="relative z-1 text-(--color-text-primary)">
@@ -106,10 +178,10 @@ export default function RegisterPage() {
                                             <FormItem>
                                                 <FormControl>
                                                     <AppInput
+                                                        {...field}
                                                         placeholder="you@example.com"
                                                         type="email"
                                                         autoComplete="email"
-                                                        {...field}
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -124,10 +196,35 @@ export default function RegisterPage() {
                                             <FormItem>
                                                 <FormControl>
                                                     <AppInput
-                                                        placeholder="Your password"
-                                                        type="password"
-                                                        autoComplete="new-password"
                                                         {...field}
+                                                        placeholder="Your password"
+                                                        type={
+                                                            showPassword
+                                                                ? 'text'
+                                                                : 'password'
+                                                        }
+                                                        autoComplete="new-password"
+                                                        icon={
+                                                            <button
+                                                                type="button"
+                                                                tabIndex={-1}
+                                                                onClick={() =>
+                                                                    setShowPassword(
+                                                                        (
+                                                                            prev,
+                                                                        ) =>
+                                                                            !prev,
+                                                                    )
+                                                                }
+                                                                className="text-muted-foreground hover:text-foreground"
+                                                            >
+                                                                {showPassword ? (
+                                                                    <EyeOff className="h-4 w-4" />
+                                                                ) : (
+                                                                    <Eye className="h-4 w-4" />
+                                                                )}
+                                                            </button>
+                                                        }
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -142,10 +239,35 @@ export default function RegisterPage() {
                                             <FormItem>
                                                 <FormControl>
                                                     <AppInput
-                                                        placeholder="Confirm your password"
-                                                        type="password"
-                                                        autoComplete="new-password"
                                                         {...field}
+                                                        placeholder="Confirm your password"
+                                                        type={
+                                                            showConfirmPassword
+                                                                ? 'text'
+                                                                : 'password'
+                                                        }
+                                                        autoComplete="new-password"
+                                                        icon={
+                                                            <button
+                                                                type="button"
+                                                                tabIndex={-1}
+                                                                onClick={() =>
+                                                                    setShowConfirmPassword(
+                                                                        (
+                                                                            prev,
+                                                                        ) =>
+                                                                            !prev,
+                                                                    )
+                                                                }
+                                                                className="text-muted-foreground hover:text-foreground"
+                                                            >
+                                                                {showConfirmPassword ? (
+                                                                    <EyeOff className="h-4 w-4" />
+                                                                ) : (
+                                                                    <Eye className="h-4 w-4" />
+                                                                )}
+                                                            </button>
+                                                        }
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
