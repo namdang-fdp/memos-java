@@ -121,4 +121,19 @@ public class InviteServiceImpl implements InviteService {
 
         return projectMemberMapper.mapToProjectMemberResponse(projectMember);
     }
+
+    @Override
+    @Transactional
+    public void declineInvite(String token, String currentUserEmail) {
+        ProjectMember projectMember = projectMemberRepository.findByInviteToken(token)
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_INVITATION));
+        if(projectMember.getInvitedStatus() != InviteStatus.PENDING) {
+            return;
+        }
+        if(!projectMember.getInvitedEmail().equalsIgnoreCase(currentUserEmail)) {
+            throw new AppException(ErrorCode.INVALID_INVITE_EMAIL);
+        }
+        projectMember.setInvitedStatus(InviteStatus.DECLINED);
+        projectMember.setInviteToken(null);
+    }
 }

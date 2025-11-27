@@ -62,4 +62,17 @@ public class InviteController {
                 .result(response)
                 .build();
     }
+
+    @PostMapping("/invite/{id}/decline")
+    @PreAuthorize("hasRole('MEMBER') or hasAuthority('ADMIN.FULL_ACCESS')")
+    public ApiResponse<String> declineInvite(
+            @PathVariable String id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        String email = jwt.getSubject();
+        inviteService.declineInvite(id, email);
+        return ApiResponse.<String>builder()
+                .result("Decline invite successfully")
+                .build();
+    }
 }

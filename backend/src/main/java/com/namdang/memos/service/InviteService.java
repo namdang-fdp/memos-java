@@ -13,4 +13,6 @@ public interface InviteService {
     InviteInfoResponse getInviteInfo(String token);
 
     ProjectMemberResponse acceptInvite(String token, String currentUserEmail);
+
+    void declineInvite(String token, String currentUserEmail);
 }
