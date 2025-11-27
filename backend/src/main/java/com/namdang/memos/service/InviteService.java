@@ -11,4 +11,6 @@ public interface InviteService {
     ProjectMemberResponse createInvite(ProjectInviteRequest projectInviteRequest, String email, UUID projectId);
 
     InviteInfoResponse getInviteInfo(String token);
+
+    ProjectMemberResponse acceptInvite(String token, String currentUserEmail);
 }

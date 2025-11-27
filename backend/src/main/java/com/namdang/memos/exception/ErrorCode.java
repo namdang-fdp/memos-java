@@ -26,6 +26,8 @@ public enum ErrorCode {
     INVITE_ALREADY_SENT(1017, "Invite already sent", HttpStatus.BAD_REQUEST),
     INVITE_NOT_FOUND(1018, "Invite not found", HttpStatus.BAD_REQUEST),
     INVITATION_IS_EXPIRED(1019, "Invite is expired", HttpStatus.BAD_REQUEST),
+    INVALID_INVITATION(1020, "Invitation is not pending", HttpStatus.BAD_REQUEST),
+    INVALID_INVITE_EMAIL(1021, "Invalid invite email", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;

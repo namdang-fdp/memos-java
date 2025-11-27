@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,9 +30,8 @@ public class InviteController {
     public ApiResponse<ProjectMemberResponse> createInvite(
             @PathVariable UUID id,
             @RequestBody ProjectInviteRequest request,
-            Authentication authentication
+            @AuthenticationPrincipal Jwt jwt
     ) {
-        Jwt jwt = (Jwt) authentication.getPrincipal();
         String email = jwt.getSubject();
         ProjectMemberResponse response = inviteService.createInvite(request, email, id);
 
@@ -46,6 +46,19 @@ public class InviteController {
     ) {
         InviteInfoResponse response = inviteService.getInviteInfo(id);
         return ApiResponse.<InviteInfoResponse>builder()
+                .result(response)
+                .build();
+    }
+
+    @PostMapping("/invite/{id}/accept")
+    @PreAuthorize("hasRole('MEMBER') or hasAuthority('ADMIN.FULL_ACCESS')")
+    public ApiResponse<ProjectMemberResponse> acceptInvite(
+            @PathVariable String id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        String email = jwt.getSubject();
+        ProjectMemberResponse response = inviteService.acceptInvite(id, email);
+        return ApiResponse.<ProjectMemberResponse>builder()
                 .result(response)
                 .build();
     }

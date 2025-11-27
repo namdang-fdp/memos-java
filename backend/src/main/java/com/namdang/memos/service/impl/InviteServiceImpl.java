@@ -95,4 +95,30 @@ public class InviteServiceImpl implements InviteService {
 
         return inviteMapper.mapToInviteInfoResponse(projectMember);
     }
+
+    @Override
+    @Transactional
+    public ProjectMemberResponse acceptInvite(String token, String currentUserEmail) {
+        ProjectMember projectMember = projectMemberRepository.findByInviteToken(token)
+                .orElseThrow(() -> new AppException(ErrorCode.INVITE_NOT_FOUND));
+        Account account = accountRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_EMAIL));
+        // check if user receive this invite is match with target user invites
+        if(!projectMember.getInvitedEmail().equalsIgnoreCase(currentUserEmail)) {
+            throw new AppException(ErrorCode.INVALID_INVITE_EMAIL);
+        }
+        if(projectMember.getInvitedStatus() != InviteStatus.PENDING) {
+            throw new AppException(ErrorCode.INVALID_INVITATION);
+        }
+        if(projectMember.getInviteExpiredAt().isBefore(LocalDateTime.now())) {
+            throw new AppException(ErrorCode.INVITATION_IS_EXPIRED);
+        }
+
+        projectMember.setAccount(account);
+        projectMember.setJoinedAt(LocalDateTime.now());
+        projectMember.setInvitedStatus(InviteStatus.ACCEPTED);
+        projectMember.setInviteToken(null);
+
+        return projectMemberMapper.mapToProjectMemberResponse(projectMember);
+    }
 }
