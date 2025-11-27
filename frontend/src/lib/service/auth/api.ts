@@ -14,6 +14,8 @@ import {
     sendCodeSchema,
     VerifyOtpForm,
     verifyOtpSchema,
+    RegisterFormValues,
+    registerSchema,
 } from './type';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -634,4 +636,46 @@ export const useLogout = () => {
             toast.error(err.message);
         },
     });
+};
+
+export const useRegister = () => {
+    const router = useRouter();
+    const setToken = useAuthStore((s) => s.setToken);
+    const mutation = useMutation({
+        mutationFn: async (values: RegisterFormValues) => {
+            const response = await axiosWrapper.post<
+                ApiResponse<RegisterResponse>
+            >('/auth/register', values);
+
+            throwIfError(response.data, response.status);
+
+            return {
+                message: response.data.message,
+                result: deserialize<RegisterResponse>(response.data),
+            };
+        },
+        onSuccess: ({ result }) => {
+            setToken(result.accessToken);
+            toast.success('Register Successfully');
+            router.push('/');
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
+
+    const form = useForm<RegisterFormValues>({
+        resolver: zodResolver(registerSchema),
+        mode: 'onChange',
+        defaultValues: {
+            email: '',
+            password: '',
+            confirmPassword: '',
+        },
+    });
+
+    return {
+        form,
+        mutation,
+    };
 };
