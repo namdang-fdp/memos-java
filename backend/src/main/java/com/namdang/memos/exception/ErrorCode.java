@@ -21,7 +21,13 @@ public enum ErrorCode {
     INVALID_PROJECT_NAME(1012, "Invalid project name", HttpStatus.BAD_REQUEST),
     PROJECT_NOT_FOUND(1013, "Project not found", HttpStatus.BAD_REQUEST),
     FORBIDDEN_ACTION(1014, "You cannot do this action",  HttpStatus.FORBIDDEN),
-    PROJECT_ALREADY_ARCHIVED(1015, "Project is already archived", HttpStatus.BAD_REQUEST)
+    PROJECT_ALREADY_ARCHIVED(1015, "Project is already archived", HttpStatus.BAD_REQUEST),
+    MEMBER_ALREADY_EXISTED(1016, "Member is already exist", HttpStatus.BAD_REQUEST),
+    INVITE_ALREADY_SENT(1017, "Invite already sent", HttpStatus.BAD_REQUEST),
+    INVITE_NOT_FOUND(1018, "Invite not found", HttpStatus.BAD_REQUEST),
+    INVITATION_IS_EXPIRED(1019, "Invite is expired", HttpStatus.BAD_REQUEST),
+    INVALID_INVITATION(1020, "Invitation is not pending", HttpStatus.BAD_REQUEST),
+    INVALID_INVITE_EMAIL(1021, "Invalid invite email", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;

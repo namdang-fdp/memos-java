@@ -73,4 +73,26 @@ public class ProjectPermission {
                 .isPresent();
     }
 
+    // just owner can invite new user to project
+    public boolean canInviteToProject(UUID projectId, Authentication authentication) {
+        if(authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+
+        if(hasAdminFullAccess(authentication)) {
+            return true;
+        }
+
+        Account account = getCurrentAccount(authentication);
+        if(account == null) {
+            return false;
+        }
+
+        return projectMemberRepository
+                .findByProjectIdAndAccountId(projectId, account.getId())
+                .map(ProjectMember::getRole)
+                .map(role -> role == ProjectRole.OWNER)
+                .orElse(false);
+    }
+
 }

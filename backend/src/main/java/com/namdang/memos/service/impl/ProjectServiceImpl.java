@@ -120,7 +120,6 @@ public class ProjectServiceImpl implements ProjectService {
         projectRepository.save(project);
     }
 
-    // update project
     @Override
     @Transactional
     public CreateProjectResponse updateProject(CreateProjectRequest request, UUID projectId) {

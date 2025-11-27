@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateProjectRequest {
-    private String name;
-    private String description;
-    private String imageUrl;
+    String name;
+    String description;
+    String imageUrl;
 }
