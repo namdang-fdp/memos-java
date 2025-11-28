@@ -19,7 +19,7 @@ public class MeResponse {
     String name;
     AuthProvider provider;
     boolean isActive;
-    LocalDate createAt;
+    LocalDate createdAt;
     String role;
     Set<String> permissions;
 }

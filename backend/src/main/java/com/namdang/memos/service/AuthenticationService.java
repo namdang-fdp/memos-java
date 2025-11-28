@@ -1,5 +1,6 @@
 package com.namdang.memos.service;
 
+import com.namdang.memos.dto.requests.auth.AccountSetupRequest;
 import com.namdang.memos.dto.requests.auth.AuthenticationRequest;
 import com.namdang.memos.dto.responses.auth.*;
 import com.namdang.memos.entity.Account;
@@ -327,6 +328,20 @@ public class AuthenticationService {
                 .registerResponse(registerResponse)
                 .tokenPair(tokenPair)
                 .build();
+    }
+
+    @Transactional
+    public MeResponse profileSetup(String email, AccountSetupRequest request) {
+        Account user = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_EMAIL));
+
+        user.setName(request.getName());
+        user.getRoles().forEach(role -> role.getPermissions().size());
+
+        String role = profileMapper.getPrimaryRole(user);
+        Set<String> permissions = profileMapper.getPermissionNames(user);
+
+        return profileMapper.toProfile(user, role, permissions);
     }
 
 }
