@@ -542,6 +542,7 @@ export const useLogin = () => {
 };
 
 export const useOidcRegister = () => {
+    const router = useRouter();
     const setToken = useAuthStore((s) => s.setToken);
     const mutation = useMutation({
         mutationFn: async () => {
@@ -559,6 +560,8 @@ export const useOidcRegister = () => {
         },
         onSuccess: ({ result }) => {
             setToken(result.accessToken);
+            console.log('Iam here in hook');
+            router.push('/auth/profile/setup');
             toast.success('Login Successfully');
         },
         onError: (err) => {

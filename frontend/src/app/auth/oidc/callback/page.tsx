@@ -15,7 +15,8 @@ export default function OidcCallbackPage() {
 
     useEffect(() => {
         if (accessToken) {
-            router.replace('/');
+            console.log('I am here useEffect');
+            router.push('/auth/profile/setup');
             return;
         }
 
@@ -28,7 +29,6 @@ export default function OidcCallbackPage() {
         registerOidc.mutate(undefined, {
             onSuccess: () => {
                 oidcRegisterInProgress = false;
-                router.replace('/');
             },
             onError: (err) => {
                 console.error('OIDC register failed', err);
