@@ -87,12 +87,14 @@ export function VerifyOtp({
                         </div>
 
                         <h1 className="text-3xl font-bold tracking-tight lg:text-4xl">
-                            {isVerified ? 'Thành công!' : 'Nhập mã xác thực'}
+                            {isVerified
+                                ? 'Success!'
+                                : 'Enter Verification Code'}
                         </h1>
                         <p className="text-muted-foreground mx-auto max-w-lg text-base leading-relaxed">
                             {isVerified
-                                ? 'Tài khoản của bạn đã được xác thực thành công.'
-                                : 'Vui lòng kiểm tra email và nhập mã gồm 6 chữ số để tiếp tục.'}
+                                ? 'Your account has been successfully verified.'
+                                : 'Please check your email and enter the 6-digit code to proceed.'}
                         </p>
                     </div>
 
@@ -113,7 +115,7 @@ export function VerifyOtp({
                                         return (
                                             <FormItem>
                                                 <label className="text-foreground mb-6 block text-base font-semibold">
-                                                    Mã xác thực
+                                                    Verification Code
                                                     <span className="text-destructive">
                                                         {' '}
                                                         *
@@ -241,14 +243,12 @@ export function VerifyOtp({
                                             {isLoading ? (
                                                 <>
                                                     <Loader2 className="h-5 w-5 animate-spin" />
-                                                    <span>
-                                                        Đang xác thực...
-                                                    </span>
+                                                    <span>Verifying...</span>
                                                 </>
                                             ) : (
                                                 <>
                                                     <span>
-                                                        Xác thực & Tiếp tục
+                                                        Verify & Continue
                                                     </span>
                                                     <ArrowRight className="h-5 w-5" />
                                                 </>
@@ -268,20 +268,20 @@ export function VerifyOtp({
                                         {isResending ? (
                                             <>
                                                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                                Đang gửi lại...
+                                                Resending...
                                             </>
                                         ) : resendCooldown > 0 ? (
                                             <>
                                                 <RotateCcw className="mr-2 h-5 w-5 opacity-60" />
                                                 <span>
-                                                    Gửi lại sau {resendCooldown}
-                                                    s
+                                                    Resend after{' '}
+                                                    {resendCooldown}s
                                                 </span>
                                             </>
                                         ) : (
                                             <>
                                                 <RotateCcw className="mr-2 h-5 w-5" />
-                                                Gửi lại mã
+                                                Resend Code
                                             </>
                                         )}
                                     </Button>
@@ -299,7 +299,7 @@ export function VerifyOtp({
                                     </div>
                                     <div>
                                         <p className="text-muted-foreground text-sm">
-                                            Mã của bạn
+                                            Your Code
                                         </p>
                                         <p className="text-foreground font-mono text-xl font-bold">
                                             {form.getValues('code')}
@@ -307,7 +307,7 @@ export function VerifyOtp({
                                     </div>
                                 </div>
                                 <p className="text-sm font-medium text-green-500/90">
-                                    Xác thực thành công!
+                                    Verified successfully!
                                 </p>
                             </div>
 
@@ -316,14 +316,14 @@ export function VerifyOtp({
                                 className="h-12 w-full rounded-lg bg-green-500 text-base font-semibold text-white transition-all hover:bg-green-600"
                             >
                                 <Check className="mr-2 h-5 w-5" />
-                                Hoàn tất
+                                Finish
                             </Button>
                         </div>
                     )}
 
                     <div className="bg-secondary/30 border-border/50 rounded-xl border p-4">
                         <p className="text-muted-foreground mb-1 text-xs font-medium">
-                            Email nhận mã:
+                            Email for code:
                         </p>
                         <p className="text-foreground truncate text-sm font-semibold">
                             {email}
@@ -332,12 +332,12 @@ export function VerifyOtp({
 
                     <div className="border-border/30 border-t pt-4 text-center">
                         <p className="text-muted-foreground text-sm">
-                            Gặp vấn đề khi xác thực?{' '}
+                            Having trouble verifying?{' '}
                             <button
                                 onClick={onBack}
                                 className="text-primary hover:text-primary/80 font-semibold transition-colors"
                             >
-                                {isVerified ? 'Đóng' : 'Quay lại'}
+                                {isVerified ? 'Close' : 'Go Back'}
                             </button>
                         </p>
                     </div>

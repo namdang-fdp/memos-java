@@ -20,16 +20,7 @@ export default function OidcCallbackPage() {
 
         oidcRegisterInProgress = true;
 
-        registerOidc.mutate(undefined, {
-            onSuccess: () => {
-                oidcRegisterInProgress = false;
-            },
-            onError: (err) => {
-                console.error('OIDC register failed', err);
-                oidcRegisterInProgress = false;
-                router.replace('/auth/login');
-            },
-        });
+        registerOidc.mutate();
     }, [accessToken, registerOidc, router]);
 
     return (

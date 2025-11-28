@@ -34,6 +34,7 @@ import {
 } from '@/lib/api/axios-config';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/lib/stores/authStore';
+import Cookies from 'js-cookie';
 
 // ory flow hook logic
 // first user access to /auth/login. If the params already have ?flow="" (ory unique flow id)
@@ -576,6 +577,15 @@ export const useOidcRegister = () => {
                 router.push('/auth/profile/setup');
             } else {
                 toast.success(`Welcome back! ${meData.result.name}`);
+                const cookieOptions = {
+                    path: '/',
+                };
+
+                Cookies.remove(
+                    'ory_session_coolsnyder1mpvl6naox',
+                    cookieOptions,
+                );
+                Cookies.remove('ory_kratos_continuity', cookieOptions);
                 router.push('/');
             }
         }
