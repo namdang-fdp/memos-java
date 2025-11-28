@@ -88,3 +88,9 @@ export const verifyOtpSchema = z.object({
 });
 
 export type VerifyOtpForm = z.infer<typeof verifyOtpSchema>;
+
+export const profileSchema = z.object({
+    name: z.string().min(1, 'Tên là bắt buộc').max(50, 'Tên quá dài'),
+});
+
+export type ProfileFormValues = z.infer<typeof profileSchema>;

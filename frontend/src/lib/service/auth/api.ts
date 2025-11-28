@@ -16,6 +16,8 @@ import {
     verifyOtpSchema,
     RegisterFormValues,
     registerSchema,
+    ProfileFormValues,
+    profileSchema,
 } from './type';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -657,7 +659,7 @@ export const useRegister = () => {
         onSuccess: ({ result }) => {
             setToken(result.accessToken);
             toast.success('Register Successfully');
-            router.push('/');
+            router.push('/auth/profile/setup');
         },
         onError: (err) => {
             toast.error(err.message);
@@ -678,4 +680,36 @@ export const useRegister = () => {
         form,
         mutation,
     };
+};
+
+export const useSetupProfile = () => {
+    const router = useRouter();
+    const mutation = useMutation({
+        mutationFn: async (values: ProfileFormValues) => {
+            const response = await axiosWrapper.post<ApiResponse>(
+                '/auth/profile/setup',
+                {
+                    name: values.name,
+                },
+            );
+
+            throwIfError(response.data, response.status);
+
+            return response.data;
+        },
+        onSuccess: () => {
+            toast.success('Profile updated successfully');
+            router.push('/');
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
+    const form = useForm<ProfileFormValues>({
+        resolver: zodResolver(profileSchema),
+        defaultValues: {
+            name: '',
+        },
+    });
+    return { form, mutation };
 };
