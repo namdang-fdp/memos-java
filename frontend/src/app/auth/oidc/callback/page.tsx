@@ -14,12 +14,6 @@ export default function OidcCallbackPage() {
     const { accessToken } = useAuthStore();
 
     useEffect(() => {
-        if (accessToken) {
-            console.log('I am here useEffect');
-            router.push('/auth/profile/setup');
-            return;
-        }
-
         if (oidcRegisterInProgress) {
             return;
         }

@@ -44,6 +44,17 @@ export interface RegisterResponse {
     provider: OidcProvider;
 }
 
+export interface MeRespose {
+    id: string;
+    email: string;
+    name: string;
+    provider: OidcProvider;
+    createdAt: string;
+    role: string;
+    permissions: string[];
+    active: boolean;
+}
+
 // -------------------- Schema ------------------------
 export const loginSchema = z.object({
     email: z
@@ -90,7 +101,10 @@ export const verifyOtpSchema = z.object({
 export type VerifyOtpForm = z.infer<typeof verifyOtpSchema>;
 
 export const profileSchema = z.object({
-    name: z.string().min(1, 'Tên là bắt buộc').max(50, 'Tên quá dài'),
+    name: z
+        .string()
+        .min(1, 'This field cannot be empty')
+        .max(50, 'Too long name'),
 });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;

@@ -1,5 +1,5 @@
 'use client';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import {
     AttrByType,
@@ -18,6 +18,7 @@ import {
     registerSchema,
     ProfileFormValues,
     profileSchema,
+    MeRespose,
 } from './type';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -544,6 +545,7 @@ export const useLogin = () => {
 export const useOidcRegister = () => {
     const router = useRouter();
     const setToken = useAuthStore((s) => s.setToken);
+    const { data: meData, isLoading: meLoading } = useGetMeProfile();
     const mutation = useMutation({
         mutationFn: async () => {
             const response =
@@ -560,15 +562,38 @@ export const useOidcRegister = () => {
         },
         onSuccess: ({ result }) => {
             setToken(result.accessToken);
-            console.log('Iam here in hook');
-            router.push('/auth/profile/setup');
-            toast.success('Login Successfully');
         },
         onError: (err) => {
             toast.error(err.message);
         },
     });
+    useEffect(() => {
+        if (meData) {
+            if (meData.result.name === null) {
+                toast.success(
+                    'Please field some additional infomation. Just for you!',
+                );
+                router.push('/auth/profile/setup');
+            } else {
+                toast.success(`Welcome back! ${meData.result.name}`);
+                router.push('/');
+            }
+        }
+    }, [meData, meLoading, router]);
     return mutation;
+};
+
+export const useGetMeProfile = () => {
+    return useQuery({
+        queryKey: ['me'],
+        queryFn: async () => {
+            const response = await axiosWrapper('/auth/me');
+            return {
+                message: response.data.message,
+                result: deserialize<MeRespose>(response.data),
+            };
+        },
+    });
 };
 
 // refresh to get new access token
