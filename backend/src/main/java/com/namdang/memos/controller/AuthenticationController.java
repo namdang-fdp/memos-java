@@ -166,7 +166,7 @@ public class AuthenticationController {
                         .build());
     }
 
-    @PostMapping("/auth/profile/setup")
+    @PostMapping("/profile/setup")
     @PreAuthorize("hasRole('MEMBER') or hasAuthority('ADMIN.FULL_ACCESS')")
     public ApiResponse<MeResponse> profileSetup(
             @RequestBody AccountSetupRequest request,

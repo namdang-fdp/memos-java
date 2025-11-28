@@ -6,6 +6,7 @@ import com.namdang.memos.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -41,6 +42,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         auth -> auth
                                 .requestMatchers(publicEndpoints).permitAll()
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .anyRequest().authenticated()
                 );
         httpSecurity.exceptionHandling(ex -> ex
@@ -54,7 +56,6 @@ public class SecurityConfig {
                     new ObjectMapper().writeValue(response.getOutputStream(), body);
                 })
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    System.out.println("Here");
                     response.setStatus(HttpStatus.FORBIDDEN.value());
                     response.setContentType("application/json");
                     ApiResponse<?> body = ApiResponse.builder()
