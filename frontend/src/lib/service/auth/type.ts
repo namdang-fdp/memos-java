@@ -44,6 +44,17 @@ export interface RegisterResponse {
     provider: OidcProvider;
 }
 
+export interface MeRespose {
+    id: string;
+    email: string;
+    name: string;
+    provider: OidcProvider;
+    createdAt: string;
+    role: string;
+    permissions: string[];
+    active: boolean;
+}
+
 // -------------------- Schema ------------------------
 export const loginSchema = z.object({
     email: z
@@ -54,6 +65,24 @@ export const loginSchema = z.object({
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
+
+export const registerSchema = z
+    .object({
+        email: z
+            .string()
+            .min(1, 'This field cannot be null')
+            .email('Invalid email'),
+        password: z.string().min(6, 'Password must be at least 6 characters'),
+        confirmPassword: z
+            .string()
+            .min(6, 'Password must be at least 6 characters'),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        path: ['confirmPassword'],
+        message: 'Re-enter password does not match',
+    });
+
+export type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export const sendCodeSchema = z.object({
     email: z.string().email('Invalid email address'),
@@ -70,3 +99,12 @@ export const verifyOtpSchema = z.object({
 });
 
 export type VerifyOtpForm = z.infer<typeof verifyOtpSchema>;
+
+export const profileSchema = z.object({
+    name: z
+        .string()
+        .min(1, 'This field cannot be empty')
+        .max(50, 'Too long name'),
+});
+
+export type ProfileFormValues = z.infer<typeof profileSchema>;

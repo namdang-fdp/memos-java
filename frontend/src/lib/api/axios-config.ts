@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
-
 import { getApiUrl } from './api-url';
+import { useAuthStore } from '../stores/authStore';
 
 const apiUrl = getApiUrl();
 
@@ -42,6 +42,22 @@ export const axiosWrapper: AxiosInstance = axios.create({
         Accept: 'application/json',
     },
 });
+
+axiosWrapper.interceptors.request.use(
+    (config) => {
+        const token = useAuthStore.getState().accessToken;
+        console.log('Here is the token', token);
+
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    },
+);
 
 export const throwIfError = (data: ApiResponse, status?: number) => {
     if (status && status >= 400) {

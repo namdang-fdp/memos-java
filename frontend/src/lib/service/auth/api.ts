@@ -1,5 +1,5 @@
 'use client';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import {
     AttrByType,
@@ -14,6 +14,11 @@ import {
     sendCodeSchema,
     VerifyOtpForm,
     verifyOtpSchema,
+    RegisterFormValues,
+    registerSchema,
+    ProfileFormValues,
+    profileSchema,
+    MeRespose,
 } from './type';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -29,12 +34,13 @@ import {
 } from '@/lib/api/axios-config';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/lib/stores/authStore';
+import Cookies from 'js-cookie';
 
 // ory flow hook logic
 // first user access to /auth/login. If the params already have ?flow="" (ory unique flow id)
 // --> call getLoginFlow to get flow data and OIDC
 // if not yet: call --> createBrowserLoginFlow to create new flow --> router replace
-export const useOryLoginFlow = () => {
+export const useOryLoginFlow = (page: string) => {
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -56,7 +62,7 @@ export const useOryLoginFlow = () => {
                 oryFetcher
                     .createBrowserLoginFlow()
                     .then(({ data }) => {
-                        router.replace(`/auth/login?flow=${data.id}`);
+                        router.replace(`/auth/${page}?flow=${data.id}`);
                     })
                     .catch(console.error);
             } catch (error) {
@@ -65,7 +71,7 @@ export const useOryLoginFlow = () => {
             }
         };
         init();
-    }, [router, searchParams]);
+    }, [router, searchParams, page]);
     return { flow, isLoading };
 };
 
@@ -538,7 +544,9 @@ export const useLogin = () => {
 };
 
 export const useOidcRegister = () => {
+    const router = useRouter();
     const setToken = useAuthStore((s) => s.setToken);
+    const { data: meData, isLoading: meLoading } = useGetMeProfile();
     const mutation = useMutation({
         mutationFn: async () => {
             const response =
@@ -555,13 +563,47 @@ export const useOidcRegister = () => {
         },
         onSuccess: ({ result }) => {
             setToken(result.accessToken);
-            toast.success('Login Successfully');
         },
         onError: (err) => {
             toast.error(err.message);
         },
     });
+    useEffect(() => {
+        if (meData) {
+            if (meData.result.name === null) {
+                toast.success(
+                    'Please field some additional infomation. Just for you!',
+                );
+                router.push('/auth/profile/setup');
+            } else {
+                toast.success(`Welcome back! ${meData.result.name}`);
+                const cookieOptions = {
+                    path: '/',
+                };
+
+                Cookies.remove(
+                    'ory_session_coolsnyder1mpvl6naox',
+                    cookieOptions,
+                );
+                Cookies.remove('ory_kratos_continuity', cookieOptions);
+                router.push('/');
+            }
+        }
+    }, [meData, meLoading, router]);
     return mutation;
+};
+
+export const useGetMeProfile = () => {
+    return useQuery({
+        queryKey: ['me'],
+        queryFn: async () => {
+            const response = await axiosWrapper('/auth/me');
+            return {
+                message: response.data.message,
+                result: deserialize<MeRespose>(response.data),
+            };
+        },
+    });
 };
 
 // refresh to get new access token
@@ -634,4 +676,78 @@ export const useLogout = () => {
             toast.error(err.message);
         },
     });
+};
+
+export const useRegister = () => {
+    const router = useRouter();
+    const setToken = useAuthStore((s) => s.setToken);
+    const mutation = useMutation({
+        mutationFn: async (values: RegisterFormValues) => {
+            const response = await axiosWrapper.post<
+                ApiResponse<RegisterResponse>
+            >('/auth/register', values);
+
+            throwIfError(response.data, response.status);
+
+            return {
+                message: response.data.message,
+                result: deserialize<RegisterResponse>(response.data),
+            };
+        },
+        onSuccess: ({ result }) => {
+            setToken(result.accessToken);
+            toast.success('Register Successfully');
+            router.push('/auth/profile/setup');
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
+
+    const form = useForm<RegisterFormValues>({
+        resolver: zodResolver(registerSchema),
+        mode: 'onChange',
+        defaultValues: {
+            email: '',
+            password: '',
+            confirmPassword: '',
+        },
+    });
+
+    return {
+        form,
+        mutation,
+    };
+};
+
+export const useSetupProfile = () => {
+    const router = useRouter();
+    const mutation = useMutation({
+        mutationFn: async (values: ProfileFormValues) => {
+            const response = await axiosWrapper.post<ApiResponse>(
+                '/auth/profile/setup',
+                {
+                    name: values.name,
+                },
+            );
+
+            throwIfError(response.data, response.status);
+
+            return response.data;
+        },
+        onSuccess: () => {
+            toast.success('Profile updated successfully');
+            router.push('/');
+        },
+        onError: (err) => {
+            toast.error(err.message);
+        },
+    });
+    const form = useForm<ProfileFormValues>({
+        resolver: zodResolver(profileSchema),
+        defaultValues: {
+            name: '',
+        },
+    });
+    return { form, mutation };
 };

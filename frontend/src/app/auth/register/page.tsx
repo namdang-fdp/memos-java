@@ -1,6 +1,5 @@
 'use client';
 
-import { LoadingSpinner } from '@/components/loading-spinner';
 import { Button } from '@/components/ui/button';
 import {
     Form,
@@ -9,24 +8,25 @@ import {
     FormItem,
     FormMessage,
 } from '@/components/ui/form';
+import Image from 'next/image';
+import React, { useState } from 'react';
+import { AppInput } from '@/components/app-input';
+import { socialIcons } from '../../../../constant/constant-data';
+import { useRouter } from 'next/navigation';
 import {
     isSecondFactorFlow,
-    LoginFormValues,
+    RegisterFormValues,
     useFacebookLogin,
     useGithubLogin,
     useGoogleLogin,
-    useLogin,
     useOryLoginFlow,
+    useRegister,
     useSecondFactorRedirect,
 } from '@/lib/service/auth';
-import Image from 'next/image';
-import React, { useState } from 'react';
-import { socialIcons } from '../../../../constant/constant-data';
-import { AppInput } from '@/components/app-input';
 import { Eye, EyeOff } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { LoadingSpinner } from '@/components/loading-spinner';
 
-export default function LoginPage() {
+export default function RegisterPage() {
     const router = useRouter();
     const [mousePosition, setMousePosition] = useState<{
         x: number;
@@ -35,10 +35,12 @@ export default function LoginPage() {
     const [isHovering, setIsHovering] = useState(false);
 
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const { form: loginForm, mutation: loginMutation } = useLogin();
+    const { form: registerForm, mutation: registerMutation } = useRegister();
+    const { isSubmitting, isValid } = registerForm.formState;
 
-    const { flow, isLoading: isFlowLoading } = useOryLoginFlow('login');
+    const { flow, isLoading: isFlowLoading } = useOryLoginFlow('register');
 
     const { canFacebookLogin, loginWithFacebook } = useFacebookLogin(flow);
     const { canGithubLogin, loginWithGithub } = useGithubLogin(flow);
@@ -96,11 +98,9 @@ export default function LoginPage() {
         });
     };
 
-    const onSubmit = (values: LoginFormValues) => {
-        loginMutation.mutate(values);
+    const onSubmit = (values: RegisterFormValues) => {
+        registerMutation.mutate(values);
     };
-
-    const isSubmitting = loginMutation.isPending;
 
     return (
         <div className="flex h-screen w-full items-center justify-center bg-(--color-bg) p-4">
@@ -124,17 +124,17 @@ export default function LoginPage() {
                     <div className="relative z-10 flex flex-col gap-6">
                         <div className="space-y-2 text-left">
                             <p className="text-muted-foreground text-xs font-semibold tracking-[0.2em] uppercase">
-                                Welcome back
+                                Create account
                             </p>
                             <h1 className="text-3xl font-extrabold md:text-4xl">
-                                Sign in
+                                Sign up
                             </h1>
                             <p className="text-muted-foreground text-sm">
-                                Enter your credentials to access your account.
+                                Enter your details to create a new account.
                             </p>
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             <div className="flex items-center justify-start">
                                 <ul className="flex gap-3 md:gap-4">
                                     {socialIcons.map((social) => (
@@ -161,47 +161,49 @@ export default function LoginPage() {
                                 </ul>
                             </div>
                             <span className="text-muted-foreground text-sm">
-                                or use your email and password
+                                or sign up with your email
                             </span>
                         </div>
 
-                        <Form {...loginForm}>
+                        <Form {...registerForm}>
                             <form
                                 className="flex flex-col gap-5"
-                                onSubmit={loginForm.handleSubmit(onSubmit)}
+                                onSubmit={registerForm.handleSubmit(onSubmit)}
                             >
                                 <div className="flex flex-col gap-4">
                                     <FormField
-                                        control={loginForm.control}
+                                        control={registerForm.control}
                                         name="email"
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormControl>
                                                     <AppInput
+                                                        {...field}
                                                         placeholder="you@example.com"
                                                         type="email"
                                                         autoComplete="email"
-                                                        {...field}
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
+
                                     <FormField
-                                        control={loginForm.control}
+                                        control={registerForm.control}
                                         name="password"
                                         render={({ field }) => (
                                             <FormItem>
                                                 <FormControl>
                                                     <AppInput
+                                                        {...field}
                                                         placeholder="Your password"
                                                         type={
                                                             showPassword
                                                                 ? 'text'
                                                                 : 'password'
                                                         }
-                                                        autoComplete="current-password"
+                                                        autoComplete="new-password"
                                                         icon={
                                                             <button
                                                                 type="button"
@@ -223,7 +225,49 @@ export default function LoginPage() {
                                                                 )}
                                                             </button>
                                                         }
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={registerForm.control}
+                                        name="confirmPassword"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <AppInput
                                                         {...field}
+                                                        placeholder="Confirm your password"
+                                                        type={
+                                                            showConfirmPassword
+                                                                ? 'text'
+                                                                : 'password'
+                                                        }
+                                                        autoComplete="new-password"
+                                                        icon={
+                                                            <button
+                                                                type="button"
+                                                                tabIndex={-1}
+                                                                onClick={() =>
+                                                                    setShowConfirmPassword(
+                                                                        (
+                                                                            prev,
+                                                                        ) =>
+                                                                            !prev,
+                                                                    )
+                                                                }
+                                                                className="text-muted-foreground hover:text-foreground"
+                                                            >
+                                                                {showConfirmPassword ? (
+                                                                    <EyeOff className="h-4 w-4" />
+                                                                ) : (
+                                                                    <Eye className="h-4 w-4" />
+                                                                )}
+                                                            </button>
+                                                        }
                                                     />
                                                 </FormControl>
                                                 <FormMessage />
@@ -232,43 +276,26 @@ export default function LoginPage() {
                                     />
                                 </div>
 
-                                {loginMutation.isError && (
-                                    <p className="text-sm text-red-500">
-                                        {(loginMutation.error as Error)
-                                            .message || 'Đăng nhập thất bại'}
-                                    </p>
-                                )}
-
                                 <div className="flex flex-col gap-3 pt-1">
                                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                         <Button
                                             type="submit"
-                                            disabled={isSubmitting}
+                                            disabled={isSubmitting || !isValid}
                                             className="inline-flex items-center justify-center rounded-md bg-white px-6 py-2 text-sm font-semibold text-black shadow-sm transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:bg-neutral-400 disabled:text-neutral-900"
                                         >
                                             {isSubmitting
-                                                ? 'Signing in...'
-                                                : 'Sign In'}
+                                                ? 'Signing up...'
+                                                : 'Sign Up'}
                                         </Button>
 
                                         <button
                                             type="button"
                                             className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                                            onClick={() =>
+                                                router.push('/auth/login')
+                                            }
                                         >
-                                            Forgot your password?
-                                        </button>
-                                    </div>
-
-                                    <div className="text-muted-foreground text-sm">
-                                        Don&apos;t have an account?{' '}
-                                        <button
-                                            type="button"
-                                            className="text-primary font-medium underline-offset-4 hover:underline"
-                                            onClick={() => {
-                                                router.push('/auth/register');
-                                            }}
-                                        >
-                                            Sign up
+                                            Already have an account?
                                         </button>
                                     </div>
                                 </div>
@@ -284,7 +311,7 @@ export default function LoginPage() {
                         width={1000}
                         height={1000}
                         priority
-                        alt="Login Banner"
+                        alt="Register Banner"
                         className="h-full w-full object-cover opacity-30 transition-transform duration-300"
                     />
                 </div>

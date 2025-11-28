@@ -1,5 +1,6 @@
 package com.namdang.memos.controller;
 
+import com.namdang.memos.dto.requests.auth.AccountSetupRequest;
 import com.namdang.memos.dto.requests.auth.AuthenticationRequest;
 import com.namdang.memos.dto.responses.ApiResponse;
 import com.namdang.memos.dto.responses.auth.*;
@@ -13,6 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -160,6 +164,19 @@ public class AuthenticationController {
                 .body(ApiResponse.<RegisterResponse>builder()
                         .result(result.getRegisterResponse())
                         .build());
+    }
+
+    @PostMapping("/profile/setup")
+    @PreAuthorize("hasRole('MEMBER') or hasAuthority('ADMIN.FULL_ACCESS')")
+    public ApiResponse<MeResponse> profileSetup(
+            @RequestBody AccountSetupRequest request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        String email =  jwt.getSubject();
+        MeResponse response = authenticationService.profileSetup(email, request);
+        return ApiResponse.<MeResponse>builder()
+                .result(response)
+                .build();
     }
 
 }

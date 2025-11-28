@@ -1,3 +1,4 @@
+'use client';
 import { ServerSidebar } from '@/components/server-sidebar';
 import { ChannelSidebar } from '@/components/channel-sidebar';
 import { KanbanBoard } from '@/components/kanban-board';

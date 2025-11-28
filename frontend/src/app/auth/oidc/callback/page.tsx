@@ -14,28 +14,13 @@ export default function OidcCallbackPage() {
     const { accessToken } = useAuthStore();
 
     useEffect(() => {
-        if (accessToken) {
-            router.replace('/');
-            return;
-        }
-
         if (oidcRegisterInProgress) {
             return;
         }
 
         oidcRegisterInProgress = true;
 
-        registerOidc.mutate(undefined, {
-            onSuccess: () => {
-                oidcRegisterInProgress = false;
-                router.replace('/');
-            },
-            onError: (err) => {
-                console.error('OIDC register failed', err);
-                oidcRegisterInProgress = false;
-                router.replace('/auth/login');
-            },
-        });
+        registerOidc.mutate();
     }, [accessToken, registerOidc, router]);
 
     return (
