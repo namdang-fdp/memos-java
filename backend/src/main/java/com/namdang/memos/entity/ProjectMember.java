@@ -2,25 +2,27 @@ package com.namdang.memos.entity;
 
 import com.namdang.memos.enumType.InviteStatus;
 import com.namdang.memos.enumType.ProjectRole;
+
 import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
 @ToString
 @DynamicUpdate
-@Table(name = "project_member",
+@Table(
+        name = "project_member",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"project_id", "account_id"}),
-        }
-)
+            @UniqueConstraint(columnNames = {"project_id", "account_id"}),
+        })
 public class ProjectMember extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
