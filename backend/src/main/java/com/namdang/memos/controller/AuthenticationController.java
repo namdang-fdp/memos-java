@@ -6,9 +6,6 @@ import com.namdang.memos.dto.responses.ApiResponse;
 import com.namdang.memos.dto.responses.auth.*;
 import com.namdang.memos.service.AuthenticationService;
 import com.namdang.memos.service.OryAuthService;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -19,164 +16,154 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.text.ParseException;
-
 @RestController
 @RequestMapping("/auth")
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@RequiredArgsConstructor
 public class AuthenticationController {
-    AuthenticationService authenticationService;
-    OryAuthService oryAuthService;
+  AuthenticationService authenticationService;
+  OryAuthService oryAuthService;
 
-    @NonFinal
-    @Value("${ory.session.cookie.name}")
-    private String cookieName;
+  @NonFinal
+  @Value("${ory.session.cookie.name}")
+  private String cookieName;
 
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthenticationResponse>> login(@RequestBody AuthenticationRequest request) {
+  @PostMapping("/login")
+  public ResponseEntity<ApiResponse<AuthenticationResponse>> login(
+      @RequestBody AuthenticationRequest request) {
 
-        LoginResult result = authenticationService.authenticate(request);
+    LoginResult result = authenticationService.authenticate(request);
 
-        TokenPair pair = result.getTokenPair();
+    TokenPair pair = result.getTokenPair();
 
-        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", pair.getRefreshToken())
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .path("/auth")
-                .maxAge(pair.getRefreshTtl())
-                .build();
+    ResponseCookie refreshCookie =
+        ResponseCookie.from("refresh_token", pair.getRefreshToken())
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("None")
+            .path("/auth")
+            .maxAge(pair.getRefreshTtl())
+            .build();
 
-        AuthenticationResponse body = AuthenticationResponse.builder()
-                .authenticated(true)
-                .token(pair.getAccessToken())
-                .role(result.getRole())
-                .build();
+    AuthenticationResponse body =
+        AuthenticationResponse.builder()
+            .authenticated(true)
+            .token(pair.getAccessToken())
+            .role(result.getRole())
+            .build();
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(ApiResponse.<AuthenticationResponse>builder().result(body).build());
-    }
+    return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+        .body(ApiResponse.<AuthenticationResponse>builder().result(body).build());
+  }
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<RegisterResponse>> register(
-            @RequestBody AuthenticationRequest request) {
+  @PostMapping("/register")
+  public ResponseEntity<ApiResponse<RegisterResponse>> register(
+      @RequestBody AuthenticationRequest request) {
 
-        RegistrationResult result = authenticationService.register(request);
+    RegistrationResult result = authenticationService.register(request);
 
-        TokenPair tokenPair = result.getTokenPair();
-        RegisterResponse body = result.getRegisterResponse();
+    TokenPair tokenPair = result.getTokenPair();
+    RegisterResponse body = result.getRegisterResponse();
 
-        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", tokenPair.getRefreshToken())
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .path("/auth")
-                .maxAge(tokenPair.getRefreshTtl())
-                .build();
+    ResponseCookie refreshCookie =
+        ResponseCookie.from("refresh_token", tokenPair.getRefreshToken())
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("None")
+            .path("/auth")
+            .maxAge(tokenPair.getRefreshTtl())
+            .build();
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(ApiResponse.<RegisterResponse>builder().result(body).build());
-    }
+    return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+        .body(ApiResponse.<RegisterResponse>builder().result(body).build());
+  }
 
+  @GetMapping("/me")
+  public ResponseEntity<ApiResponse<MeResponse>> me(
+      @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authHeader)
+      throws Exception {
 
-    @GetMapping("/me")
-    public ResponseEntity<ApiResponse<MeResponse>> me(
-            @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authHeader
-    ) throws Exception {
+    MeResponse profile = authenticationService.me(authHeader);
 
-        MeResponse profile = authenticationService.me(authHeader);
+    return ResponseEntity.ok(ApiResponse.<MeResponse>builder().result(profile).build());
+  }
 
-        return ResponseEntity.ok(
-                ApiResponse.<MeResponse>builder().result(profile).build()
-        );
-    }
+  @PostMapping("/logout")
+  public ResponseEntity<ApiResponse<Void>> logout(
+      @CookieValue(name = "refresh_token", required = false) String refreshToken,
+      @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authHeader)
+      throws Exception {
 
+    authenticationService.logout(authHeader, refreshToken);
 
-    @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(
-            @CookieValue(name = "refresh_token", required = false) String refreshToken,
-            @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authHeader
-    ) throws Exception {
+    ResponseCookie deleteRefresh =
+        ResponseCookie.from("refresh_token", "")
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("None")
+            .path("/auth")
+            .maxAge(0)
+            .build();
 
-        authenticationService.logout(authHeader, refreshToken);
+    return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, deleteRefresh.toString())
+        .body(ApiResponse.<Void>builder().build());
+  }
 
-        ResponseCookie deleteRefresh = ResponseCookie.from("refresh_token", "")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .path("/auth")
-                .maxAge(0)
-                .build();
+  @PostMapping("/refresh")
+  public ResponseEntity<ApiResponse<AuthenticationResponse>> refresh(
+      @CookieValue(name = "refresh_token", required = false) String refreshToken) throws Exception {
+    LoginResult result = authenticationService.refreshFromCookie(refreshToken);
+    TokenPair pair = result.getTokenPair();
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, deleteRefresh.toString())
-                .body(ApiResponse.<Void>builder().build());
-    }
+    ResponseCookie newRefresh =
+        ResponseCookie.from("refresh_token", pair.getRefreshToken())
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("None")
+            .path("/auth")
+            .maxAge(pair.getRefreshTtl())
+            .build();
 
+    AuthenticationResponse body =
+        AuthenticationResponse.builder()
+            .authenticated(true)
+            .token(pair.getAccessToken())
+            .role(result.getRole())
+            .build();
 
-    @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<AuthenticationResponse>> refresh(
-            @CookieValue(name = "refresh_token", required = false) String refreshToken
-    ) throws Exception {
-        LoginResult result = authenticationService.refreshFromCookie(refreshToken);
-        TokenPair pair = result.getTokenPair();
+    return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, newRefresh.toString())
+        .body(ApiResponse.<AuthenticationResponse>builder().result(body).build());
+  }
 
-        ResponseCookie newRefresh = ResponseCookie.from("refresh_token", pair.getRefreshToken())
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
-                .path("/auth")
-                .maxAge(pair.getRefreshTtl())
-                .build();
+  @PostMapping("/oidc/ory")
+  public ResponseEntity<ApiResponse<RegisterResponse>> loginFromOry(
+      @CookieValue(name = "${ory.session.cookie.name}", required = false) String oryCookieValue) {
+    RegistrationResult result = oryAuthService.loginFromOrySession(cookieName, oryCookieValue);
 
-        AuthenticationResponse body = AuthenticationResponse.builder()
-                .authenticated(true)
-                .token(pair.getAccessToken())
-                .role(result.getRole())
-                .build();
+    TokenPair tokenPair = result.getTokenPair();
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, newRefresh.toString())
-                .body(ApiResponse.<AuthenticationResponse>builder().result(body).build());
-    }
+    ResponseCookie refreshCookie =
+        ResponseCookie.from("refresh_token", tokenPair.getRefreshToken())
+            .secure(true)
+            .httpOnly(true)
+            .sameSite("None")
+            .path("/auth")
+            .maxAge(tokenPair.getRefreshTtl())
+            .build();
 
-    @PostMapping("/oidc/ory")
-    public ResponseEntity<ApiResponse<RegisterResponse>> loginFromOry(
-            @CookieValue(name = "${ory.session.cookie.name}", required = false) String oryCookieValue
-    ) {
-        RegistrationResult result = oryAuthService.loginFromOrySession(cookieName,oryCookieValue);
+    return ResponseEntity.ok()
+        .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+        .body(ApiResponse.<RegisterResponse>builder().result(result.getRegisterResponse()).build());
+  }
 
-        TokenPair tokenPair = result.getTokenPair();
-
-        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", tokenPair.getRefreshToken())
-                .secure(true)
-                .httpOnly(true)
-                .sameSite("None")
-                .path("/auth")
-                .maxAge(tokenPair.getRefreshTtl())
-                .build();
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(ApiResponse.<RegisterResponse>builder()
-                        .result(result.getRegisterResponse())
-                        .build());
-    }
-
-    @PostMapping("/profile/setup")
-    @PreAuthorize("hasRole('MEMBER') or hasAuthority('ADMIN.FULL_ACCESS')")
-    public ApiResponse<MeResponse> profileSetup(
-            @RequestBody AccountSetupRequest request,
-            @AuthenticationPrincipal Jwt jwt
-    ) {
-        String email =  jwt.getSubject();
-        MeResponse response = authenticationService.profileSetup(email, request);
-        return ApiResponse.<MeResponse>builder()
-                .result(response)
-                .build();
-    }
-
+  @PostMapping("/profile/setup")
+  @PreAuthorize("hasRole('MEMBER') or hasAuthority('ADMIN.FULL_ACCESS')")
+  public ApiResponse<MeResponse> profileSetup(
+      @RequestBody AccountSetupRequest request, @AuthenticationPrincipal Jwt jwt) {
+    String email = jwt.getSubject();
+    MeResponse response = authenticationService.profileSetup(email, request);
+    return ApiResponse.<MeResponse>builder().result(response).build();
+  }
 }
