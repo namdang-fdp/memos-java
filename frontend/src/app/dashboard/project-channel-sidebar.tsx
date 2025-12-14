@@ -48,7 +48,7 @@ const directMessages = [
     { id: 'dm3', name: 'Emily Watson', status: 'dnd', avatar: 'EW', unread: 0 },
 ];
 
-export function ChannelSidebar() {
+export function ProjectChannelSidebar() {
     const [activeChannel, setActiveChannel] = useState('1');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -225,3 +225,4 @@ export function ChannelSidebar() {
         </div>
     );
 }
+
