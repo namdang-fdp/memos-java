@@ -25,7 +25,7 @@ export function MainContent() {
                     <h2 className="text-text-primary text-base font-semibold">
                         general
                     </h2>
-                    <div className="bg-border-subtle h-4 w-[1px]" />
+                    <div className="bg-border-subtle h-4 w-px" />
                     <p className="text-text-muted text-sm">
                         Team collaboration and updates
                     </p>
@@ -80,7 +80,7 @@ export function MainContent() {
                     {/* Sample Welcome Card with Glass Effect */}
                     <div className="glass-effect mt-8 max-w-2xl space-y-4 rounded-2xl p-6">
                         <div className="flex items-start gap-3">
-                            <div className="from-accent-blue to-accent-hover flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-sm font-semibold text-white shadow-lg">
+                            <div className="from-accent-blue to-accent-hover flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br text-sm font-semibold text-white shadow-lg">
                                 AI
                             </div>
                             <div className="flex-1">
