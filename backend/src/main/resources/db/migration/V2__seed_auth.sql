@@ -13,7 +13,6 @@ VALUES
   (gen_random_uuid(), 'ADMIN', 'System administrator')
 ON CONFLICT (name) DO NOTHING;
 
--- MEMBER permissions
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r
@@ -26,7 +25,6 @@ JOIN permission p ON p.name IN (
 WHERE r.name = 'MEMBER'
 ON CONFLICT DO NOTHING;
 
--- ADMIN permissions
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id
 FROM role r

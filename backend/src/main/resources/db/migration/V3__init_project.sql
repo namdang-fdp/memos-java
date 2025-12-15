@@ -6,15 +6,12 @@ CREATE TABLE IF NOT EXISTS project (
     created_at      TIMESTAMP NOT NULL DEFAULT now(),
     updated_at      TIMESTAMP NULL,
     is_deleted      BOOLEAN NOT NULL DEFAULT false,
-
     name            VARCHAR(255) NOT NULL,
     project_key     VARCHAR(50) NOT NULL UNIQUE,
     image_url       TEXT NULL,
     description     TEXT NULL,
-
     created_by      UUID NOT NULL,
     is_archived     BOOLEAN NOT NULL DEFAULT false,
-
     CONSTRAINT fk_project_created_by
         FOREIGN KEY (created_by) REFERENCES account(id)
 );
@@ -37,14 +34,10 @@ CREATE TABLE IF NOT EXISTS project_member (
     created_at          TIMESTAMP NOT NULL DEFAULT now(),
     updated_at          TIMESTAMP NULL,
     is_deleted          BOOLEAN NOT NULL DEFAULT false,
-
     project_id          UUID NOT NULL,
     account_id          UUID NULL,
-
     joined_at           TIMESTAMP NULL,
-
     role                VARCHAR(20) NOT NULL DEFAULT 'MEMBER',
-
     invited_email       TEXT NULL,
     invited_status      VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     invite_token        VARCHAR(200) UNIQUE,

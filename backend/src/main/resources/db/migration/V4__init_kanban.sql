@@ -1,21 +1,12 @@
--- V4__init_kanban.sql
--- Kanban core schema (matches JPA entities exactly):
--- board, feature, task, task_snippet, task_comment, label, task_label, task_assignee, task_activity
-
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- =========================================================
--- BOARD (com.namdang.memos.entity.Board)
--- =========================================================
 CREATE TABLE IF NOT EXISTS board (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at  TIMESTAMP NOT NULL DEFAULT now(),
     updated_at  TIMESTAMP NULL,
     is_deleted  BOOLEAN NOT NULL DEFAULT false,
-
     project_id  UUID NOT NULL,
     name        VARCHAR(255) NOT NULL,
-
     board_type  VARCHAR(20) NOT NULL DEFAULT 'KANBAN',
     is_archived BOOLEAN NOT NULL DEFAULT false,
 
@@ -30,24 +21,16 @@ ON board (project_id);
 CREATE INDEX IF NOT EXISTS idx_board_project_archived
 ON board (project_id, is_archived);
 
-
--- =========================================================
--- FEATURE (com.namdang.memos.entity.Feature)
--- =========================================================
 CREATE TABLE IF NOT EXISTS feature (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at  TIMESTAMP NOT NULL DEFAULT now(),
     updated_at  TIMESTAMP NULL,
     is_deleted  BOOLEAN NOT NULL DEFAULT false,
-
     board_id    UUID NOT NULL,
-
     name        VARCHAR(255) NOT NULL,
     description TEXT NULL,
-
     position    NUMERIC(20, 10) NOT NULL,
     wip_limit   INT NULL,
-
     is_archived BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT fk_feature_board
@@ -65,9 +48,6 @@ CREATE INDEX IF NOT EXISTS idx_feature_board_archived
 ON feature (board_id, is_archived);
 
 
--- =========================================================
--- TASK (com.namdang.memos.entity.Task)
--- =========================================================
 CREATE TABLE IF NOT EXISTS task (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at   TIMESTAMP NOT NULL DEFAULT now(),
@@ -115,10 +95,6 @@ ON task (project_id, completed_at);
 CREATE INDEX IF NOT EXISTS idx_task_due_at
 ON task (due_at);
 
-
--- =========================================================
--- TASK_SNIPPET (com.namdang.memos.entity.TaskSnippet)
--- =========================================================
 CREATE TABLE IF NOT EXISTS task_snippet (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at  TIMESTAMP NOT NULL DEFAULT now(),
@@ -152,10 +128,6 @@ ON task_snippet (task_id, position);
 CREATE INDEX IF NOT EXISTS idx_task_snippet_language
 ON task_snippet (language);
 
-
--- =========================================================
--- TASK_COMMENT (com.namdang.memos.entity.TaskComment)
--- =========================================================
 CREATE TABLE IF NOT EXISTS task_comment (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at  TIMESTAMP NOT NULL DEFAULT now(),
@@ -182,10 +154,6 @@ ON task_comment (task_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_task_comment_author
 ON task_comment (author_id);
 
-
--- =========================================================
--- LABEL (com.namdang.memos.entity.Label)
--- =========================================================
 CREATE TABLE IF NOT EXISTS label (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at  TIMESTAMP NOT NULL DEFAULT now(),
@@ -208,11 +176,6 @@ CREATE TABLE IF NOT EXISTS label (
 CREATE INDEX IF NOT EXISTS idx_label_project_id
 ON label (project_id);
 
-
--- =========================================================
--- TASK_LABEL (com.namdang.memos.entity.TaskLabel)
--- Composite PK: (task_id, label_id)
--- =========================================================
 CREATE TABLE IF NOT EXISTS task_label (
     task_id    UUID NOT NULL,
     label_id   UUID NOT NULL,
@@ -228,7 +191,6 @@ CREATE TABLE IF NOT EXISTS task_label (
         FOREIGN KEY (label_id) REFERENCES label(id) ON DELETE CASCADE
 );
 
--- unique constraint name from entity (redundant with PK but keep for matching intent)
 DO $$
 BEGIN
     IF NOT EXISTS (
@@ -247,10 +209,6 @@ CREATE INDEX IF NOT EXISTS idx_task_label_label_id
 ON task_label (label_id);
 
 
--- =========================================================
--- TASK_ASSIGNEE (com.namdang.memos.entity.TaskAssignee)
--- Composite PK: (task_id, account_id)
--- =========================================================
 CREATE TABLE IF NOT EXISTS task_assignee (
     task_id     UUID NOT NULL,
     account_id  UUID NOT NULL,
@@ -289,9 +247,6 @@ CREATE INDEX IF NOT EXISTS idx_task_assignee_account_id
 ON task_assignee (account_id);
 
 
--- =========================================================
--- TASK_ACTIVITY (com.namdang.memos.entity.TaskActivity)
--- =========================================================
 CREATE TABLE IF NOT EXISTS task_activity (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at    TIMESTAMP NOT NULL DEFAULT now(),

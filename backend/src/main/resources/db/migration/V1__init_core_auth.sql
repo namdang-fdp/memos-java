@@ -1,12 +1,10 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- ACCOUNT
 CREATE TABLE IF NOT EXISTS account (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at      TIMESTAMP NOT NULL DEFAULT now(),
     updated_at      TIMESTAMP NULL,
     is_deleted      BOOLEAN NOT NULL DEFAULT false,
-
     email           VARCHAR(255) NOT NULL UNIQUE,
     password        TEXT NULL,
     name            VARCHAR(150) NULL,

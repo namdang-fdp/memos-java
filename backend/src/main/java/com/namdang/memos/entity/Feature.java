@@ -38,7 +38,6 @@ public class Feature extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    // Ordering (DECIMAL/NUMERIC)
     @Column(name = "position", nullable = false, precision = 20, scale = 10)
     private BigDecimal position;
 
