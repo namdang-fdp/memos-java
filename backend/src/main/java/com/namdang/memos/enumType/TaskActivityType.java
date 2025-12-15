@@ -1,0 +1,17 @@
+package com.namdang.memos.enumType;
+
+public enum TaskActivityType {
+    TASK_CREATED,
+    TASK_UPDATED,
+    TASK_MOVED,
+    TASK_COMPLETED,
+    TASK_REOPENED,
+    COMMENT_ADDED,
+    ASSIGNEE_ADDED,
+    ASSIGNEE_REMOVED,
+    LABEL_ADDED,
+    LABEL_REMOVED,
+    SNIPPET_ADDED,
+    SNIPPET_UPDATED,
+    SNIPPET_REMOVED
+}

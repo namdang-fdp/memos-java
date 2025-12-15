@@ -28,8 +28,8 @@ public class BaseEntity {
 
     @Column(name = "updated_at")
     @UpdateTimestamp
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 
-    @Column(name = "is_deleted")
+    @Column(name = "is_deleted", nullable = false)
     private boolean deleted = false;
 }
