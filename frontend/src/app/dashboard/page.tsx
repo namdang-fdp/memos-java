@@ -1,16 +1,7 @@
-'use client';
-import { ProjectSidebar } from './project-sidebar';
-import { ProjectChannelSidebar } from './project-channel-sidebar';
-import { KanbanBoard } from '@/components/kanban-board';
-
-export default function HomePage() {
+export default function DashboardHomePage() {
     return (
-        <div className="bg-background flex h-screen overflow-hidden">
-            <ProjectSidebar />
-
-            <ProjectChannelSidebar />
-
-            <KanbanBoard />
+        <div>
+            <h1>Hello home</h1>
         </div>
     );
 }

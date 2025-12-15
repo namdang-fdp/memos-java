@@ -116,7 +116,7 @@
 
     --shadow-soft: 0 20px 40px rgba(0, 0, 0, 0.18);
 
-    --kanban-board-circle-blue: oklch(0.6232 0.1879 259.80);
+    --kanban-board-circle-blue: oklch(0.6232 0.1879 259.8);
 
     --kanban-board-circle-cyan: oklch(0.7146 0.1256 215.13);
 
@@ -124,7 +124,7 @@
 
     --kanban-board-circle-green: oklch(0.7229 0.1921 149.58);
 
-    --kanban-board-circle-indigo: oklch(0.5860 0.2037 277.12);
+    --kanban-board-circle-indigo: oklch(0.586 0.2037 277.12);
 
     --kanban-board-circle-pink: oklch(0.6559 0.2117 354.34);
 
@@ -198,7 +198,7 @@
 
     --kanban-board-circle-gray: oklch(0.7137 0.0192 261.33);
 
-    --kanban-board-circle-green: oklch(0.8003 0.1823 151.70);
+    --kanban-board-circle-green: oklch(0.8003 0.1823 151.7);
 
     --kanban-board-circle-indigo: oklch(0.6797 0.1586 276.96);
 
@@ -206,11 +206,11 @@
 
     --kanban-board-circle-purple: oklch(0.7218 0.1766 305.51);
 
-    --kanban-board-circle-red: oklch(0.7108 0.1660 22.21);
+    --kanban-board-circle-red: oklch(0.7108 0.166 22.21);
 
     --kanban-board-circle-violet: oklch(0.7093 0.1589 293.52);
 
-    --kanban-board-circle-yellow: oklch(0.8601 0.1730 91.84);
+    --kanban-board-circle-yellow: oklch(0.8601 0.173 91.84);
 }
 
 @layer base {
@@ -240,18 +240,18 @@
         border-radius: var(--radius-xl);
         box-shadow: var(--shadow-soft);
     }
-  :root {
-    --color-kanban-board-circle-blue: var(--kanban-board-circle-blue);
-    --color-kanban-board-circle-cyan: var(--kanban-board-circle-cyan);
-    --color-kanban-board-circle-gray: var(--kanban-board-circle-gray);
-    --color-kanban-board-circle-green: var(--kanban-board-circle-green);
-    --color-kanban-board-circle-indigo: var(--kanban-board-circle-indigo);
-    --color-kanban-board-circle-pink: var(--kanban-board-circle-pink);
-    --color-kanban-board-circle-primary: var(--kanban-board-circle-primary);
-    --color-kanban-board-circle-purple: var(--kanban-board-circle-purple);
-    --color-kanban-board-circle-red: var(--kanban-board-circle-red);
-    --color-kanban-board-circle-violet: var(--kanban-board-circle-violet);
-    --color-kanban-board-circle-yellow: var(--kanban-board-circle-yellow);
+    :root {
+        --color-kanban-board-circle-blue: var(--kanban-board-circle-blue);
+        --color-kanban-board-circle-cyan: var(--kanban-board-circle-cyan);
+        --color-kanban-board-circle-gray: var(--kanban-board-circle-gray);
+        --color-kanban-board-circle-green: var(--kanban-board-circle-green);
+        --color-kanban-board-circle-indigo: var(--kanban-board-circle-indigo);
+        --color-kanban-board-circle-pink: var(--kanban-board-circle-pink);
+        --color-kanban-board-circle-primary: var(--kanban-board-circle-primary);
+        --color-kanban-board-circle-purple: var(--kanban-board-circle-purple);
+        --color-kanban-board-circle-red: var(--kanban-board-circle-red);
+        --color-kanban-board-circle-violet: var(--kanban-board-circle-violet);
+        --color-kanban-board-circle-yellow: var(--kanban-board-circle-yellow);
     }
 }
 
@@ -301,3 +301,87 @@ textarea:-webkit-autofill:focus {
     --normal-text: var(--destructive);
     --normal-border: var(--destructive);
 }
+
+/* Added enhanced styles for Kanban board cards and animations */
+@layer utilities {
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        @apply bg-transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        @apply bg-border/60 rounded-full transition-colors;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        @apply bg-muted-foreground/50;
+    }
+
+    /* Kanban card elevation styles inspired by Linear/Jira */
+    .kanban-card-elevation {
+        box-shadow:
+            0 1px 2px 0 rgba(0, 0, 0, 0.05),
+            0 0 0 1px rgba(0, 0, 0, 0.05);
+    }
+
+    .kanban-card-elevation:hover {
+        box-shadow:
+            0 4px 8px -2px rgba(0, 0, 0, 0.1),
+            0 2px 4px -2px rgba(0, 0, 0, 0.06),
+            0 0 0 1px rgba(0, 0, 0, 0.05);
+    }
+
+    .dark .kanban-card-elevation {
+        box-shadow:
+            0 1px 3px 0 rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .dark .kanban-card-elevation:hover {
+        box-shadow:
+            0 8px 16px -4px rgba(0, 0, 0, 0.4),
+            0 4px 8px -4px rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    /* Column elevation */
+    .kanban-column-elevation {
+        box-shadow:
+            0 1px 3px 0 rgba(0, 0, 0, 0.04),
+            0 0 0 1px rgba(0, 0, 0, 0.02);
+    }
+
+    .dark .kanban-column-elevation {
+        box-shadow:
+            0 1px 3px 0 rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(255, 255, 255, 0.03);
+    }
+
+    /* Smooth drag animation */
+    .kanban-card-dragging {
+        opacity: 0.4;
+        transform: scale(0.98) rotate(1deg);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .kanban-card-active {
+        transform: scale(1.02);
+        box-shadow:
+            0 8px 16px -4px rgba(0, 0, 0, 0.12),
+            0 4px 8px -4px rgba(0, 0, 0, 0.08),
+            0 0 0 2px var(--primary);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .dark .kanban-card-active {
+        box-shadow:
+            0 12px 24px -8px rgba(0, 0, 0, 0.5),
+            0 8px 16px -8px rgba(0, 0, 0, 0.4),
+            0 0 0 2px var(--primary);
+    }
+}
+
