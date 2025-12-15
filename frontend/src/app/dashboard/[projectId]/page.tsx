@@ -2,8 +2,6 @@
 
 import { useState, useRef, type FormEvent, type KeyboardEvent } from 'react';
 import { flushSync } from 'react-dom';
-import { ProjectSidebar } from '../project-sidebar';
-import { ThemeToggle } from '@/components/common/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
