@@ -35,7 +35,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         // whitelist endpoint (no authenticate need)
-        String[] baseEndpoints = {"/auth/oidc/ory","/auth/login", "/auth/register", "/v3/api-docs", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/invite/info/**"};
+        String[] baseEndpoints = {"/auth/oidc/ory","/auth/login", "/auth/register", "/v3/api-docs", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/invite/info/**", "/auth/refresh"};
         String[] publicEndpoints = Arrays.stream(baseEndpoints).map(endpoint -> endpoint).toArray(String[]::new);
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
