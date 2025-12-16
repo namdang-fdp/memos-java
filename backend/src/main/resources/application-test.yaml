@@ -1,0 +1,27 @@
+spring:
+  flyway:
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  mail:
+    host: localhost
+    port: 1025
+    username: test
+    password: test
+
+server:
+  port: 0
+
+JWT_ISSUER: "test-issuer"
+JWT_AUDIENCE: "test-audience"
+JWT_CLOCK_SKEW_SECONDS: "0"
+ORY_PUBLIC_URL: "http://localhost:9999"
+
+jwt:
+  issuer: "test-issuer"
+  audience: "test-audience"
+  clock-skew-seconds: 0
+
+ory:
+  public-url: "http://localhost:9999"
