@@ -25,3 +25,6 @@ jwt:
 
 ory:
   public-url: "http://localhost:9999"
+  session:
+    cookie:
+      name: "ory_kratos_session"
