@@ -2,56 +2,44 @@ name: Backend Main CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - "backend/**"
+      - ".github/workflows/backend-*.yml"
+
+permissions:
+  contents: read
 
 jobs:
-  backend-main:
-    name: Backend Main - Build & Sonar
+  build-test-sonar:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: backend
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_DB: memos_test
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-        options: >-
-          --health-cmd="pg_isready -U test"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - name: Set up Java
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12
         with:
           distribution: temurin
-          java-version: 21
+          java-version: "21"
           cache: maven
 
-      - name: Run tests & build
+      - name: Run tests (unit + integration)
+        working-directory: backend
         env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/memos_test
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/ignore
           SPRING_DATASOURCE_USERNAME: test
           SPRING_DATASOURCE_PASSWORD: test
-        run: mvn -B verify
+        run: mvn -B -DskipTests=false verify
 
       - name: SonarCloud Scan (Main)
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@1a6d90ebcb0e6a6b1d87e37ba693fe453195ae25
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectBaseDir=backend
